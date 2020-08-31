@@ -10,7 +10,7 @@
 #include "TRint.h"
 #include "TEveBrowser.h"
 
-using HPS::EventDisplay;
+using hps::EventDisplay;
 
 int main (int argc, char **argv) {
 

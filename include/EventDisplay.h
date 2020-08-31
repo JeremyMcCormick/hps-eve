@@ -4,7 +4,7 @@
 #include "TGFrame.h"
 #include "TEveManager.h"
 
-namespace HPS {
+namespace hps {
 
     class EventDisplay : public TGMainFrame {
 
@@ -13,6 +13,8 @@ namespace HPS {
             EventDisplay(TEveManager* manager,
                          std::string geometryFile,
                          std::vector<std::string> lcioFileList);
+
+            void NextEvent();
 
         private:
 
