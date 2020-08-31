@@ -1,8 +1,17 @@
 #include "EventDisplay.h"
 
+// C++ standard library
 #include <unistd.h>
 #include <iostream>
 #include <stdexcept>
+
+// ROOT
+#include "TGeoManager.h"
+#include "TRint.h"
+#include "TEveManager.h"
+#include "TEveBrowser.h"
+#include "TGeoNode.h"
+#include "TEveGeoNode.h"
 
 namespace HPS {
 
@@ -32,4 +41,32 @@ namespace HPS {
 
         std::cout << "Done parsing args!" << std::endl;
     }
-}
+
+    int EventDisplay::run() {
+        TRint *app = 0;
+        app = new TRint("ROOT App", 0, 0);
+        //app->SetPrompt("");
+
+        TEveManager* gEve = TEveManager::Create(kTRUE , "FV");
+
+        TEveBrowser* browser = gEve->GetBrowser();
+        browser->StartEmbedding(TRootBrowser::kLeft);
+
+        TGeoManager* gGeoManager = gEve->GetGeometry(this->geometryFile.c_str());
+        TGeoNode* top = gGeoManager->GetTopNode();
+        TEveGeoTopNode* world = new TEveGeoTopNode(gGeoManager, top);
+        gEve->AddGlobalElement(world);
+        gEve->FullRedraw3D(kTRUE);
+
+        //TGLViewer* v = gEve->GetDefaultGLViewer();
+        //v->DoDraw();
+
+        browser->StartEmbedding(TRootBrowser::kLeft);
+        browser->SetTabTitle("Event Control", 0);
+        browser->StopEmbedding();
+
+        app->Run(kFALSE);
+
+        return 0;
+    }
+} /* namespace HPS */
