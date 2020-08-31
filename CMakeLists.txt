@@ -15,6 +15,8 @@ include_directories(${ROOT_INCLUDE_DIRS})
 
 add_definitions(${ROOT_CXX_FLAGS})
 
+file(GLOB_RECURSE library_sources ${PROJECT_SOURCE_DIR}/src/*.cxx)
+
 add_executable(hps-eve ${library_sources} ${PROJECT_SOURCE_DIR}/hps_eve.cxx)
 
 target_link_libraries(hps-eve
