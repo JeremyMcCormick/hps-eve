@@ -1,21 +1,24 @@
 #include <vector>
 #include <string>
 
+#include "TGFrame.h"
+#include "TEveManager.h"
+
 namespace HPS {
 
-    class EventDisplay {
+    class EventDisplay : public TGMainFrame {
 
         public:
 
-            /** Parse command line arguments. */
-            void parseArgs (int argc, char **argv);
-
-            /** Run and return the return code. */
-            int run();
+            EventDisplay(TEveManager* manager,
+                         std::string geometryFile,
+                         std::vector<std::string> lcioFileList);
 
         private:
 
+            TEveManager* manager_;
+
             std::vector<std::string> lcioFileList_;
-            std::string geometryFile;
+            std::string geometryFile_;
     };
 }
