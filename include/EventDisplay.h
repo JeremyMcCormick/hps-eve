@@ -14,6 +14,8 @@ namespace hps {
                          std::string geometryFile,
                          std::vector<std::string> lcioFileList);
 
+            ~EventDisplay();
+
             void NextEvent();
 
         private:
@@ -22,5 +24,7 @@ namespace hps {
 
             std::vector<std::string> lcioFileList_;
             std::string geometryFile_;
+
+            ClassDef(EventDisplay, 1);
     };
 }
