@@ -32,7 +32,8 @@ namespace hps {
             : TGMainFrame(gClient->GetRoot(), 320, 320),
               geometryFile_(geometryFile),
               lcioFileList_(lcioFileList),
-              manager_(manager) {
+              manager_(manager),
+              eventManager_(nullptr) {
 
         SetWindowName("HPS Event Display");
 
@@ -41,7 +42,9 @@ namespace hps {
         TEveGeoTopNode* world = new TEveGeoTopNode(gGeoManager, top);
         manager_->AddGlobalElement(world);
 
-        manager_->AddEvent(new EventManager());
+        eventManager_ = new EventManager(lcioFileList);
+        manager_->AddEvent(eventManager_);
+        eventManager_->Open();
 
         TGVerticalFrame* contents = new TGVerticalFrame(this, 1000, 1200);
         TGHorizontalFrame* commandFrameNextEvent = new TGHorizontalFrame(contents, 100,0);
@@ -65,10 +68,7 @@ namespace hps {
 
     void EventDisplay::NextEvent() {
         std::cout << "<<<< nextEvent" << std::endl;
-        std::ofstream myfile;
-        myfile.open ("nextEvent.txt");
-        myfile << "nextEvent was called\n";
-        myfile.close();
+        eventManager_->NextEvent();
     }
 
 } /* namespace HPS */

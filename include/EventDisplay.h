@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 
+// ROOT
 #include "TGFrame.h"
 #include "TEveManager.h"
 
@@ -21,6 +22,7 @@ namespace hps {
         private:
 
             TEveManager* manager_;
+            TEveEventManager* eventManager_;
 
             std::vector<std::string> lcioFileList_;
             std::string geometryFile_;
