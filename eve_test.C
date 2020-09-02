@@ -12,19 +12,21 @@
 
 TEveElementList* build_tracker(TGeoManager* geo) {
     auto trackerElements = new TEveElementList("Tracker");
-    TGeoNode* trackingVol = geo->GetTopVolume()->FindNode("tracking_volume_0");
-    TGeoNode* baseVol = trackingVol->GetVolume()->FindNode("base_volume_0");
-    auto nav = geo->GetCurrentNavigator();
-    for (int i=0; i<baseVol->GetNdaughters(); i++) {
-        TGeoNode* node = baseVol->GetDaughter(i);
+    //TGeoNode* trackingVol = geo->GetTopVolume()->FindNode("tracking_volume_0");
+    //TGeoNode* baseVol = trackingVol->GetVolume()->FindNode("base_volume_0");
+    geo->cd("/world_volume_1/tracking_volume_0/base_volume_0");
+    auto ndau = geo->GetCurrentNode()->GetNdaughters();
+    for (int i=0; i<ndau; i++) {
+        geo->CdDown(i);
+        //TGeoNode* node = baseVol->GetDaughter(i);
+        TGeoNode* node = geo->GetCurrentNode();
+        std::cout << "cd into: " << geo->GetCurrentNode() << std::endl;
         if (std::string(node->GetName()).find("module_L") != std::string::npos) {
-            std::cout << "Processing node: " << node->GetName() << std::endl;
+            std::cout << "Adding module: " << node->GetName() << std::endl;
             auto nodeName = node->GetName();
             std::string path = std::string("/world_volume_1/tracking_volume_0/base_volume_0/") + std::string(nodeName);
-            std::cout << "path: " << path << std::endl;
+
             geo->cd(path.c_str());
-            auto matrix = nav->GetCurrentMatrix();
-            std::cout << matrix << std::endl;
 
             TGeoVolume* vol = gGeoManager->GetCurrentVolume();
             TEveGeoShape* shape = new TEveGeoShape(node->GetName(), vol->GetMaterial()->GetName());
@@ -34,21 +36,17 @@ TEveElementList* build_tracker(TGeoManager* geo) {
             shape->SetMainTransparency(vol->GetTransparency());
             shape->RefMainTrans().SetFrom(*geo->GetCurrentMatrix());
             trackerElements->AddElement(shape);
-
-            std::cout << "Added tracker element: " << shape->GetName() << std::endl;
-
-            std::cout << std::endl;
         }
+        geo->CdUp();
     }
     return trackerElements;
 }
 
 void eve_test() {
-    std::cout << "HPS Eve Test" << std::endl;
 
     // Create ROOT intepreter app
     TRint *app = 0;
-    app = new TRint("XXX", 0, 0);
+    app = new TRint("Eve App", 0, 0);
 
     // Create Eve manager
     TEveManager *manager = TEveManager::Create(kTRUE, "FV");
@@ -63,6 +61,7 @@ void eve_test() {
     geo->DefaultColors();
 
     auto topNode = gGeoManager->GetTopNode();
+
     //auto eveNode = new TEveGeoTopNode(geo, topNode);
     //eveNode->ExpandIntoListTreesRecursively();
     //manager->AddGlobalElement(eveNode);
