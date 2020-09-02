@@ -8,6 +8,7 @@
 #include "TEveElement.h"
 #include "TGeoNode.h"
 #include "TGeoNavigator.h"
+#include "TEveTrans.h"
 
 TEveElementList* build_tracker(TGeoManager* geo) {
     auto trackerElements = new TEveElementList("Tracker");
@@ -18,16 +19,20 @@ TEveElementList* build_tracker(TGeoManager* geo) {
         TGeoNode* node = baseVol->GetDaughter(i);
         if (std::string(node->GetName()).find("module_L") != std::string::npos) {
             std::cout << "Processing node: " << node->GetName() << std::endl;
-            nav->CdDown(node);
+            auto nodeName = node->GetName();
+            std::string path = std::string("/world_volume_1/tracking_volume_0/base_volume_0/") + std::string(nodeName);
+            std::cout << "path: " << path << std::endl;
+            geo->cd(path.c_str());
             auto matrix = nav->GetCurrentMatrix();
-            matrix->Print();
-            node->GetVolume()->GetShape()->GetName();
+            std::cout << matrix << std::endl;
 
             TGeoVolume* vol = gGeoManager->GetCurrentVolume();
             TEveGeoShape* shape = new TEveGeoShape(node->GetName(), vol->GetMaterial()->GetName());
+            shape->SetShape((TGeoShape*) vol->GetShape()->Clone());
             shape->SetMainColor(vol->GetLineColor());
+            shape->SetFillColor(vol->GetFillColor());
             shape->SetMainTransparency(vol->GetTransparency());
-            shape->RefMainTrans().SetFrom(*nav->GetCurrentMatrix());
+            shape->RefMainTrans().SetFrom(*geo->GetCurrentMatrix());
             trackerElements->AddElement(shape);
 
             std::cout << "Added tracker element: " << shape->GetName() << std::endl;
