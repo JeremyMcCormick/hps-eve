@@ -6,6 +6,7 @@
 
 // ROOT
 #include "TEveManager.h"
+#include "TGeoManager.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -16,22 +17,17 @@ namespace hps {
 
         public:
 
-            EventObjects();
+            EventObjects(TGeoManager* geo);
 
-            void setEvent(EVENT::LCEvent* event);
-
-            void add(TEveManager* manager);
-
-            void build();
-
-            const std::vector<TEveElement*>& getElementList();
+            void build(TEveManager* manager, EVENT::LCEvent* event);
 
         private:
 
-            TEveElementList* convertSimTrackerHits(EVENT::LCCollection* coll);
+            TEveElementList* createSimTrackerHits(EVENT::LCCollection* coll);
 
-            EVENT::LCEvent* event_;
-            std::vector<TEveElement*> elements_;
+            TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
+
+            TGeoManager* geo_;
     };
 }
 

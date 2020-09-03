@@ -61,4 +61,15 @@ namespace hps {
                                      "crystal_volume");
         eve_->AddGlobalElement(cal);
     }
+
+    TEveElement* DetectorGeometry::toEveElement(TGeoManager* mgr, TGeoNode* node) {
+        TGeoVolume* vol = gGeoManager->GetCurrentVolume();
+        TEveGeoShape* shape = new TEveGeoShape(node->GetName(), vol->GetMaterial()->GetName());
+        shape->SetShape((TGeoShape*) vol->GetShape()->Clone());
+        shape->SetMainColor(vol->GetLineColor());
+        shape->SetFillColor(vol->GetFillColor());
+        shape->SetMainTransparency(vol->GetTransparency());
+        shape->RefMainTrans().SetFrom(*mgr->GetCurrentMatrix());
+        return shape;
+    }
 }

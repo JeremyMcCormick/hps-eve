@@ -14,14 +14,13 @@
 #include "EVENT/LCIO.h"
 #include "IO/LCReader.h"
 
-
 namespace hps {
 
     class EventManager : public TEveEventManager {
 
         public:
 
-            EventManager(TEveManager* eve, std::vector<std::string> fileNames);
+            EventManager(TEveManager* eve, TGeoManager* geo, std::vector<std::string> fileNames);
 
             ~EventManager();
 
@@ -41,11 +40,11 @@ namespace hps {
         private:
 
             TEveManager* eve_;
-
+            TGeoManager* geo_;
             IO::LCReader* reader_;
             std::vector<std::string> fileNames_;
 
-            EventObjects event_;
+            EventObjects* event_;
 
             ClassDef(EventManager, 1);
     };

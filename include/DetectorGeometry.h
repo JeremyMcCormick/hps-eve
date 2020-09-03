@@ -18,6 +18,11 @@ namespace hps {
 
             DetectorGeometry(TGeoManager* geo, TEveManager* eve);
 
+            /**
+             * Utility function to convert a single TGeoNode into an Eve element.
+             */
+            static TEveElement* toEveElement(TGeoManager* mgr, TGeoNode* node);
+
         private:
 
             /**
@@ -28,6 +33,7 @@ namespace hps {
                                                       const char* name,
                                                       const char* path,
                                                       const char* patt);
+
             /**
              * Add the SVT to Eve.
              */

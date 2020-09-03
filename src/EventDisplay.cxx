@@ -41,7 +41,7 @@ namespace hps {
 
         geo_ = new DetectorGeometry(gGeoManager, manager);
 
-        eventManager_ = new EventManager(manager, lcioFileList);
+        eventManager_ = new EventManager(manager, gGeoManager, lcioFileList);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();
 

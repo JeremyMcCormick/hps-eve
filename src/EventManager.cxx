@@ -6,45 +6,43 @@ ClassImp(hps::EventManager);
 
 namespace hps {
 
-    EventManager::EventManager(TEveManager* eve, std::vector<std::string> fileNames) :
+    EventManager::EventManager(TEveManager* eve, TGeoManager* geo, std::vector<std::string> fileNames) :
             TEveEventManager("HPS Event Manager", ""),
             eve_(eve),
+            geo_(geo),
             fileNames_(fileNames),
-            reader_(nullptr) {
+            reader_(nullptr),
+            event_(new EventObjects(geo)) {
     }
 
     EventManager::~EventManager() {
+        delete event_;
     }
 
     void EventManager::Open() {
-        std::cout << "Opening reader... " << std::endl;
+        std::cout << "[ EventManager ]: Opening reader... " << std::endl;
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader();
         reader_->open(this->fileNames_);
-        std::cout << "Done opening reader!" << std::endl;
+        std::cout << "[ EventManager ]: Done opening reader!" << std::endl;
     }
 
     void EventManager::NextEvent() {
-        std::cout << "Reading next LCIO event..." << std::endl;
+        std::cout << "[ EventManager ]: Reading next LCIO event..." << std::endl;
 
-        // Destroy the Eve elements from prior event.
+        // Destroy the Eve elements from the prior event.
         eve_->GetCurrentEvent()->DestroyElements();
 
         EVENT::LCEvent* event = reader_->readNextEvent();
-        event_.setEvent(event);
-        event_.build();
-        auto elements = event_.getElementList();
-        for (std::vector<TEveElement*>::const_iterator it = elements.begin();
-                it != elements.end();
-                it++) {
-            std::cout << "Adding element to event: " << (*it)->GetElementName() << std::endl;
-            eve_->AddElement(*it);
-        }
+        std::cout << "[ EventManager ] : Read LCIO event: " << event->getEventNumber() << std::endl;
 
-        std::cout << "Read LCIO event: " << event->getEventNumber() << std::endl;
+        std::cout << "[ EventManager ] : Converting event to Eve..." << std::endl;
+        event_->build(eve_, event);
+        std::cout << "[ EventManager ] : Done converting event!" << std::endl;
+        std::cout << std::endl;
     }
 
     void EventManager::GotoEvent(Int_t i) {
-        std::cout << "EventManager::GotoEvent - " << i << std::endl;
+        std::cout << "[ EventManager ] : GotoEvent: " << i << std::endl;
     }
 
     void EventManager::PrevEvent() {
