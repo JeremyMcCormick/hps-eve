@@ -1,3 +1,5 @@
+#ifndef HPS_EVENTMANAGER_H_
+#define HPS_EVENTMANAGER_H_ 1
 
 #include "TEveEventManager.h"
 
@@ -32,3 +34,5 @@ namespace hps {
             std::vector<std::string> fileNames_;
     };
 }
+
+#endif

@@ -14,6 +14,7 @@
 #pragma link C++ nestedtypedef;
 
 #pragma link C++ class hps::EventDisplay+;
+#pragma link C++ class hps::DetectorGeometry+;
 
 #endif
 

@@ -4,3 +4,4 @@
  */
 
 #include "EventDisplay.h"
+#include "DetectorGeometry.h"

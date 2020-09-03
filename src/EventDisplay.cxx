@@ -38,9 +38,8 @@ namespace hps {
         SetWindowName("HPS Event Display");
 
         TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
-        TGeoNode* top = gGeoManager->GetTopNode();
-        TEveGeoTopNode* world = new TEveGeoTopNode(gGeoManager, top);
-        manager_->AddGlobalElement(world);
+
+        geo_ = new DetectorGeometry(gGeoManager, manager);
 
         eventManager_ = new EventManager(lcioFileList);
         manager_->AddEvent(eventManager_);
@@ -59,8 +58,6 @@ namespace hps {
         MapSubwindows();
         Resize(GetDefaultSize());
         MapWindow();
-
-        manager_->FullRedraw3D(kTRUE);
     }
 
     EventDisplay::~EventDisplay() {
