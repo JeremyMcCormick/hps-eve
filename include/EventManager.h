@@ -1,19 +1,29 @@
 #ifndef HPS_EVENTMANAGER_H_
 #define HPS_EVENTMANAGER_H_ 1
 
-#include "TEveEventManager.h"
+// HPS
+#include "EventObjects.h"
 
+// C++ standard library
 #include <iostream>
 
+// ROOT
+#include "TEveEventManager.h"
+
+// LCIO
 #include "EVENT/LCIO.h"
 #include "IO/LCReader.h"
+
 
 namespace hps {
 
     class EventManager : public TEveEventManager {
 
         public:
-            EventManager(std::vector<std::string> fileNames);
+
+            EventManager(TEveManager* eve, std::vector<std::string> fileNames);
+
+            ~EventManager();
 
             void Open();
 
@@ -30,8 +40,14 @@ namespace hps {
 
         private:
 
+            TEveManager* eve_;
+
             IO::LCReader* reader_;
             std::vector<std::string> fileNames_;
+
+            EventObjects event_;
+
+            ClassDef(EventManager, 1);
     };
 }
 

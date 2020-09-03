@@ -15,6 +15,7 @@
 
 #pragma link C++ class hps::EventDisplay+;
 #pragma link C++ class hps::DetectorGeometry+;
+#pragma link C++ class hps::EventManager+;
 
 #endif
 

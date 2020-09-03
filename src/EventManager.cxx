@@ -2,12 +2,18 @@
 
 #include "IOIMPL/LCFactory.h"
 
+ClassImp(hps::EventManager);
+
 namespace hps {
 
-    EventManager::EventManager(std::vector<std::string> fileNames) :
-            TEveEventManager("HPS Event", ""),
+    EventManager::EventManager(TEveManager* eve, std::vector<std::string> fileNames) :
+            TEveEventManager("HPS Event Manager", ""),
+            eve_(eve),
             fileNames_(fileNames),
             reader_(nullptr) {
+    }
+
+    EventManager::~EventManager() {
     }
 
     void EventManager::Open() {
@@ -19,7 +25,21 @@ namespace hps {
 
     void EventManager::NextEvent() {
         std::cout << "Reading next LCIO event..." << std::endl;
+
+        // Destroy the Eve elements from prior event.
+        eve_->GetCurrentEvent()->DestroyElements();
+
         EVENT::LCEvent* event = reader_->readNextEvent();
+        event_.setEvent(event);
+        event_.build();
+        auto elements = event_.getElementList();
+        for (std::vector<TEveElement*>::const_iterator it = elements.begin();
+                it != elements.end();
+                it++) {
+            std::cout << "Adding element to event: " << (*it)->GetElementName() << std::endl;
+            eve_->AddElement(*it);
+        }
+
         std::cout << "Read LCIO event: " << event->getEventNumber() << std::endl;
     }
 
