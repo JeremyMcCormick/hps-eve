@@ -48,7 +48,7 @@ int main (int argc, char **argv) {
     app = new TRint("XXX", 0, 0);
 
     // Create Eve manager
-    TEveManager *manager = TEveManager::Create (kTRUE, "FV");
+    TEveManager *manager = TEveManager::Create(kTRUE, "FV");
 
     // Get Eve browser and embed it
     TEveBrowser *browser = manager->GetBrowser ();
@@ -59,6 +59,8 @@ int main (int argc, char **argv) {
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding ();
+
+    manager->FullRedraw3D();
 
     app->Run(kFALSE);
 
