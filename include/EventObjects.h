@@ -11,6 +11,7 @@
 
 // LCIO
 #include "EVENT/LCObject.h"
+#include "EVENT/SimTrackerHit.h"
 
 namespace hps {
 
@@ -29,6 +30,13 @@ namespace hps {
             TEveElementList* createSimTrackerHits(EVENT::LCCollection* coll);
 
             TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
+
+            TEveCompound* createMCParticles(EVENT::LCCollection* coll,
+                                            EVENT::LCCollection* simTrackerHits);
+
+            static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
+                                           EVENT::LCCollection* hits,
+                                           EVENT::MCParticle* p);
 
             TGeoManager* geo_;
 

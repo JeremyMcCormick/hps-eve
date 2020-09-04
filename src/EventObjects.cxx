@@ -8,11 +8,16 @@
 #include "EVENT/LCCollection.h"
 #include "EVENT/SimTrackerHit.h"
 #include "EVENT/SimCalorimeterHit.h"
+#include "EVENT/MCParticle.h"
 
 // ROOT
 #include "TEveElement.h"
 #include "TEvePointSet.h"
+#include "TEveCompound.h"
 #include "TColor.h"
+#include "TEveTrackPropagator.h"
+#include "TEveVSDStructs.h"
+#include "TEveTrack.h"
 
 using EVENT::LCIO;
 
@@ -27,6 +32,9 @@ namespace hps {
         if (verbose_) {
             std::cout << "[ EventObjects ] Set new LCIO event with event num: " << event->getEventNumber() << std::endl;
         }
+
+        EVENT::LCCollection* simTrackerHits = event->getCollection("TrackerHits");
+
         const std::vector<std::string>* collNames = event->getCollectionNames();
         for (std::vector<std::string>::const_iterator it = collNames->begin();
                 it != collNames->end();
@@ -39,21 +47,27 @@ namespace hps {
                 continue;
             }
             EVENT::LCCollection* coll = event->getCollection(name);
-            TEveElementList* elements = nullptr;
+            TEveElement* elements = nullptr;
             auto typeName = coll->getTypeName();
             if (typeName == LCIO::SIMTRACKERHIT) {
                 elements = createSimTrackerHits(coll);
             } else if (typeName == LCIO::SIMCALORIMETERHIT) {
                 elements = createSimCalorimeterHits(coll);
+            } else if (typeName == LCIO::MCPARTICLE) {
+                elements = createMCParticles(coll, simTrackerHits);
             }
             if (elements != nullptr) {
-                elements->SetName(name.c_str());
+                elements->SetElementName(name.c_str());
                 if (verbose_) {
                     std::cout << "[ EventObjects ] Adding elements: " << name << std::endl;
                 }
                 manager->AddElement(elements);
             }
         }
+    }
+
+    bool EventObjects::excludeCollection(const std::string& collName) {
+        return excludeColls_.find(collName) != excludeColls_.end();
     }
 
     TEveElementList* EventObjects::createSimTrackerHits(EVENT::LCCollection* coll) {
@@ -134,8 +148,103 @@ namespace hps {
         return elements;
     }
 
-    bool EventObjects::excludeCollection(const std::string& collName) {
-        return excludeColls_.find(collName) != excludeColls_.end();
+    // REF: Druid src/BuildMCParticles.cc
+    TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection* coll,
+                                                  EVENT::LCCollection* simTrackerHits) {
+
+        //TEveElementList* elements = new TEveElementList();
+
+        TEveCompound *mcTracks = new TEveCompound();
+        mcTracks->SetMainColor(kRed);
+        mcTracks->SetName("MC Particles");
+        mcTracks->OpenCompound();
+
+        TEveTrackPropagator* propsetCharged = new TEveTrackPropagator();
+        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, -1.0, 0.0));
+        propsetCharged->SetDelta(0.01); // Step
+
+        // from Druid
+        propsetCharged->SetMaxR(100);
+        propsetCharged->SetMaxZ(1000);
+        propsetCharged->SetMaxOrbs(10.0);
+
+        propsetCharged->RefPMAtt().SetMarkerColor(kYellow);
+        propsetCharged->RefPMAtt().SetMarkerStyle(kCircle);
+        propsetCharged->RefPMAtt().SetMarkerSize(1.0);
+
+        for (int i=0; i<coll->getNumberOfElements(); i++) {
+            EVENT::MCParticle* p = dynamic_cast<EVENT::MCParticle*>(coll->getElementAt(i));
+            float charge = p->getCharge();
+            //const double* endpoint = p->getEndpoint();
+            const double* momentum = p->getMomentum();
+            const double* vertex = p->getVertex();
+
+            double px = momentum[0];
+            double py = momentum[1];
+            double pz = momentum[2];
+            double x = vertex[0];
+            double y = vertex[1];
+            double z = vertex[2];
+            // Only look at charged gen particles for now...
+            if (p->getGeneratorStatus() && charge != 0.0) {
+                std::cout << "[ EventObjects ] : Processing MCParticle: charge = " << charge
+                        << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3] << "); "
+                        << "momentum = (" << momentum[0] << ", " << momentum[1] << ", " << momentum[3] << ")"
+                        << "gen_status = " << p->getGeneratorStatus()
+                        << std::endl;
+
+                TEveRecTrack* chargedTrack = new TEveRecTrack();
+                chargedTrack->fV.Set(TEveVector(x, y, z));
+                chargedTrack->fP.Set(px, py, pz);
+                chargedTrack->fSign = charge;
+
+                TEveTrack* track = new TEveTrack(chargedTrack, propsetCharged);
+                TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
+                TEvePathMark* pm2 = new TEvePathMark(TEvePathMark::kReference);
+                TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
+                track->SetMainColor(kRed);
+
+                std::vector<EVENT::SimTrackerHit*> particleHits;
+                findSimTrackerHits(particleHits, simTrackerHits, p);
+                if (particleHits.size() > 0) {
+                    std::cout << "[ EventObjects ] : Found hits for particle: " << particleHits.size() << std::endl;
+                    for (std::vector<EVENT::SimTrackerHit*>::iterator it = particleHits.begin();
+                            it != particleHits.end();
+                            it++) {
+                        auto particleHit = *it;
+                        const double* hitPosition = particleHit->getPosition();
+                        TEveVector setHit(
+                                (float) hitPosition[0]/10.0,
+                                (float) hitPosition[1]/10.0,
+                                (float) hitPosition[2]/10.0);
+                        pm1->fV.Set(setHit);
+                        track->AddPathMark(*pm1);
+                    }
+                }
+
+                mcTracks->AddElement(track);
+
+                //TEveVector SetHit(hit->getPosition()[0]/10.0, hit->getPosition()[1]/10.0, hit->getPosition()[2]/10.0);
+                //pm1->fV.Set(SetHit);
+                //track->AddPathMark(*pm1);
+
+                std::cout << "[ EventObjects ] Done creating track!" << std::endl;
+            }
+        }
+        mcTracks->CloseCompound();
+        return mcTracks;
+    }
+
+    void EventObjects::findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
+                                          EVENT::LCCollection* hits,
+                                          EVENT::MCParticle* p) {
+        int nhits = hits->getNumberOfElements();
+        for (int i=0; i<nhits; i++) {
+            EVENT::SimTrackerHit* hit = dynamic_cast<EVENT::SimTrackerHit*>(hits->getElementAt(i));
+            if (hit->getMCParticle() == p) {
+                list.push_back(hit);
+            }
+        }
     }
 
 } /* namespace hps */
