@@ -5,6 +5,7 @@
 // C++ standard library
 #include <string>
 #include <vector>
+#include <set>
 
 // ROOT
 #include "TRint.h"
@@ -16,13 +17,16 @@ int main (int argc, char **argv) {
 
     std::string geometryFile;
     std::vector<std::string> lcioFileList;
+    std::set<std::string> excludeColls;
 
     int c = 0;
-    while ((c = getopt (argc, argv, "g:")) != -1) {
+    while ((c = getopt (argc, argv, "e:g:")) != -1) {
         switch (c) {
             case 'g':
-                std::cout << "GDML file: " << optarg << std::endl;
                 geometryFile = std::string(optarg);
+                break;
+            case 'e':
+                excludeColls.insert(std::string(optarg));
                 break;
             case '?':
                 std::cout << optopt << std::endl;
@@ -31,7 +35,6 @@ int main (int argc, char **argv) {
     }
 
     for (int index = optind; index < argc; index++) {
-        std::cout << "LCIO file: " << argv[index] << std::endl;
         lcioFileList.push_back (std::string (argv[index]));
     }
 
@@ -55,7 +58,7 @@ int main (int argc, char **argv) {
     browser->StartEmbedding(TRootBrowser::kLeft);
 
     // Create the main event display class
-    EventDisplay display(manager, geometryFile, lcioFileList);
+    EventDisplay display(manager, geometryFile, lcioFileList, excludeColls);
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();
