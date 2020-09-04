@@ -25,7 +25,8 @@ namespace hps {
             EventManager(TEveManager* eve,
                          TGeoManager* geo,
                          EventDisplay* app,
-                         std::vector<std::string> fileNames);
+                         std::vector<std::string> fileNames,
+                         int verbose = 0);
 
             ~EventManager();
 
@@ -50,6 +51,8 @@ namespace hps {
 
         private:
 
+            void loadEvent(EVENT::LCEvent* event);
+
             TEveManager* eve_;
             TGeoManager* geo_;
             EventDisplay* app_;
@@ -57,7 +60,14 @@ namespace hps {
             IO::LCReader* reader_;
             std::vector<std::string> fileNames_;
 
+            int runNumber_{-1};
+
             EventObjects* event_;
+
+            int eventNum_{-1};
+            int maxEvents_{-1};
+
+            int verbose_{0};
 
             ClassDef(EventManager, 1);
     };

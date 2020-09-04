@@ -11,14 +11,16 @@ namespace hps {
     EventManager::EventManager(TEveManager* eve,
                                TGeoManager* geo,
                                EventDisplay* app,
-                               std::vector<std::string> fileNames) :
+                               std::vector<std::string> fileNames,
+                               int verbose) :
             TEveEventManager("HPS Event Manager", ""),
             eve_(eve),
             geo_(geo),
             fileNames_(fileNames),
             reader_(nullptr),
             event_(new EventObjects(geo)),
-            app_(app) {
+            app_(app),
+            verbose_(verbose) {
     }
 
     EventManager::~EventManager() {
@@ -26,37 +28,95 @@ namespace hps {
     }
 
     void EventManager::Open() {
-        std::cout << "[ EventManager ]: Opening reader... " << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventManager ]: Opening reader... " << std::endl;
+        }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader();
         reader_->open(this->fileNames_);
-        std::cout << "[ EventManager ]: Done opening reader!" << std::endl;
+        maxEvents_ = reader_->getNumberOfEvents();
+        if (verbose_) {
+            std::cout << "[ EventManager ]: Max events set to " << maxEvents_ << std::endl;
+        }
+        auto runHeader = reader_->readNextRunHeader();
+        if (runHeader != nullptr) {
+            runNumber_ = runHeader->getRunNumber();
+        } else if (runHeader == nullptr) {
+            if (verbose_) {
+                std::cout << "[ EventManager ]: Setting run number from first event ..." << std::endl;
+            }
+            auto event = reader_->readNextEvent();
+            runNumber_ = event->getRunNumber();
+            reader_->close();
+            reader_->open(this->fileNames_);
+            if (verbose_) {
+                std::cout << "[ EventManager ] : Done setting run number from first event!" << std::endl;
+            }
+        }
+        if (verbose_) {
+            std::cout << "[ EventManager ]: Run number set to: " << runNumber_ << std::endl;
+            std::cout << "[ EventManager ]: Done opening reader!" << std::endl;
+        }
     }
 
     void EventManager::NextEvent() {
-        std::cout << "[ EventManager ]: Reading next LCIO event..." << std::endl;
+        GotoEvent(eventNum_ + 1);
+    }
 
-        // Destroy the Eve elements from the prior event.
+    void EventManager::loadEvent(EVENT::LCEvent* event) {
         eve_->GetCurrentEvent()->DestroyElements();
-
-        EVENT::LCEvent* event = reader_->readNextEvent();
-        std::cout << "[ EventManager ] : Read LCIO event: " << event->getEventNumber() << std::endl;
-
-        std::cout << "[ EventManager ] : Converting event to Eve..." << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventManager ] : Loading LCIO event: " << event->getEventNumber() << std::endl;
+        }
         event_->build(eve_, event);
-        std::cout << "[ EventManager ] : Done converting event!" << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventManager ] : Done loading event!" << std::endl;
+        }
         std::cout << std::endl;
     }
 
     void EventManager::GotoEvent(Int_t i) {
-        std::cout << "[ EventManager ] : GotoEvent: " << i << std::endl;
+        if (i > maxEvents_ - 1) {
+            std::cerr << "[ EventManager ] : Event num " << i
+                    << " is greater than max events " << maxEvents_
+                    << " (command ignored) " << std::endl;
+            return;
+        } else if (i < 0) {
+            std::cerr << "[ EventManager ] Event num is not valid: " << i << std::endl;
+            return;
+        } else if (i == eventNum_) {
+            std::cerr << "[ EventManager ] Event is already loaded: " << i << std::endl;
+            return;
+        }
+        EVENT::LCEvent* event = nullptr;
+        if (i == (eventNum_ + 1)) {
+            if (verbose_) {
+                std::cout << "[ EventManager ] : Reading next event" << std::endl;
+            }
+            event = reader_->readNextEvent();
+        } else {
+            if (verbose_) {
+                std::cout << "[ EventManager ] : Seeking event " << i
+                        << " with run number " << runNumber_ << std::endl;
+            }
+            event = reader_->readEvent(runNumber_, i);
+        }
+        loadEvent(event);
+        eventNum_ = i;
+
     }
 
     void EventManager::PrevEvent() {
-        std::cout << "[ EventManager ] : PrevEvent" << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventManager ] : PrevEvent" << std::endl;
+        }
+        GotoEvent(eventNum_ - 1);
     }
 
     void EventManager::SetEventNumber() {
-        std::cout << "[ EventManager ] : Set event number from GUI: " << app_->getCurrentEventNumber() << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventManager ] : Set event number: " << app_->getCurrentEventNumber() << std::endl;
+        }
+        GotoEvent(app_->getCurrentEventNumber());
     }
 
     /*

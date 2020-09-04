@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <stdlib.h>
 #include <fstream>
+#include <limits>
 
 // ROOT
 #include "TGeoManager.h"
@@ -48,7 +49,11 @@ namespace hps {
 
         geo_ = new DetectorGeometry(gGeoManager, manager);
 
-        eventManager_ = new EventManager(manager, gGeoManager, this, lcioFileList);
+        eventManager_ = new EventManager(manager,
+                                         gGeoManager,
+                                         this,
+                                         lcioFileList,
+                                         1 /* verbose lvl */);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();
 
@@ -81,11 +86,9 @@ namespace hps {
                                               TGNumberFormat::kNESInteger,
                                               TGNumberFormat::kNEAAnyNumber,
                                               TGNumberFormat::kNELLimitMinMax,
-                                              0, 100000); // TODO: Max should be based on current file
-        eventNrFrame->AddFrame(eventNrLabel);
+                                              0, std::numeric_limits<int>::max());
+        eventNrFrame->AddFrame(eventNrLabel, new TGLayoutHints(kLHintsNormal, 5, 5, 0, 0));
         eventNrFrame->AddFrame(eventNumberEntry_);
-        // This doesn't seem to work. New value is always 0.
-        //eventNumberEntry_->Connect("ValueSet(Long_t)", "hps::EventDisplay", this, "SetEventNumber()");
         eventNumberEntry_->GetNumberEntry()->Connect(
                 "ReturnPressed()", "hps::EventManager", eventManager_, "SetEventNumber()");
         frmEvent->AddFrame(eventNrFrame);
