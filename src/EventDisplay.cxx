@@ -41,14 +41,19 @@ namespace hps {
             lcioFileList_(lcioFileList),
             manager_(manager),
             eventManager_(nullptr),
-            eventNumberEntry_(nullptr) {
+            eventNumberEntry_(nullptr),
+            verbose_(verbose) {
 
         SetWindowName("HPS Event Display");
 
-        std::cout << "[ EventDisplay ]: Opening geometry file: " << this->geometryFile_ << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventDisplay ] Opening geometry file: " << this->geometryFile_ << std::endl;
+        }
         TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
-        geo_ = new DetectorGeometry(gGeoManager, manager);
-        std::cout << "[ EventDisplay ]: Done opening geometry!" << std::endl;
+        geo_ = new DetectorGeometry(gGeoManager, manager, verbose_);
+        if (verbose_) {
+            std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
+        }
 
         // FIXME: Might be better to define this outside this class and pass as a pntr arg.
         eventManager_ = new EventManager(manager,
@@ -56,7 +61,7 @@ namespace hps {
                                          this,
                                          lcioFileList,
                                          excludeColls,
-                                         1 /* verbose lvl */);
+                                         verbose_);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();
 

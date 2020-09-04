@@ -44,7 +44,7 @@ namespace hps {
 
             TGNumberEntry* eventNumberEntry_;
 
-            int verbose_{0};
+            int verbose_;
 
             ClassDef(EventDisplay, 1);
     };

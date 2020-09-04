@@ -18,20 +18,24 @@ using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(TGeoManager* geo, std::set<std::string> excludeColls) :
-            geo_(geo), excludeColls_(excludeColls) {
+    EventObjects::EventObjects(TGeoManager* geo, std::set<std::string> excludeColls, int verbose) :
+            geo_(geo), excludeColls_(excludeColls), verbose_(verbose) {
         ecalStyle_.SetPalette(kThermometer);
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
-        std::cout << "[ EventObjects ] : Set new LCIO event with event num: " << event->getEventNumber() << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventObjects ] Set new LCIO event with event num: " << event->getEventNumber() << std::endl;
+        }
         const std::vector<std::string>* collNames = event->getCollectionNames();
         for (std::vector<std::string>::const_iterator it = collNames->begin();
                 it != collNames->end();
                 it++) {
             auto name = *it;
             if (excludeCollection(name)) {
-                std::cout << "[ EventObjects ] : Ignoring excluded collection: " << name << std::endl;
+                if (verbose_) {
+                    std::cout << "[ EventObjects ] Ignoring excluded collection: " << name << std::endl;
+                }
                 continue;
             }
             EVENT::LCCollection* coll = event->getCollection(name);
@@ -44,7 +48,9 @@ namespace hps {
             }
             if (elements != nullptr) {
                 elements->SetName(name.c_str());
-                std::cout << "[ EventObjects ] : Adding elements: " << name << std::endl;
+                if (verbose_) {
+                    std::cout << "[ EventObjects ] Adding elements: " << name << std::endl;
+                }
                 manager->AddElement(elements);
             }
         }
@@ -87,7 +93,9 @@ namespace hps {
                 max = energy;
             }
         }
-        std::cout << "[ EventObjects ] : ECAL min, max hit energy: " << min << ", " << max << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventObjects ] ECAL min, max hit energy: " << min << ", " << max << std::endl;
+        }
         min = min * 100;
         max = max * 100;
 
@@ -100,12 +108,19 @@ namespace hps {
             auto y = pos[1]/10.0;
             auto z = pos[2]/10.0;
             auto hitTime = hit->getTimeCont(0);
-            std::cout << "[ EventObjects ] : Looking for ECAL crystal at: ("
-                    << x << ", " << y << ", " << z << ")" << std::endl;
+            if (verbose_) {
+                std::cout << "[ EventObjects ] Looking for ECAL crystal at: ("
+                        << x << ", " << y << ", " << z << ")" << std::endl;
+            }
             geo_->CdTop();
             TGeoNode* node = geo_->FindNode((double)x, (double)y, (double)z);
             if (node != nullptr) {
-                std::cout << "[ EventObjects ] : Found geo node: " << node->GetName() << std::endl;
+                if (verbose_) {
+                    std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
+                }
+            } else {
+                std::cerr << "[ EventObjects ] No geo node found!" << std::endl;
+                continue;
             }
             TEveElement* element = DetectorGeometry::toEveElement(geo_, node);
             auto energyScaled = energy * 100;

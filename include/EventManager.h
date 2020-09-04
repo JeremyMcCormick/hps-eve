@@ -69,7 +69,7 @@ namespace hps {
             int eventNum_{-1};
             int maxEvents_{-1};
 
-            int verbose_{0};
+            int verbose_;
 
             ClassDef(EventManager, 1);
     };

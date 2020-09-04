@@ -19,7 +19,7 @@ namespace hps {
             geo_(geo),
             fileNames_(fileNames),
             reader_(nullptr),
-            event_(new EventObjects(geo, excludeColls)),
+            event_(new EventObjects(geo, excludeColls, verbose)),
             app_(app),
             verbose_(verbose),
             excludeColls_(excludeColls) {
@@ -31,32 +31,32 @@ namespace hps {
 
     void EventManager::Open() {
         if (verbose_) {
-            std::cout << "[ EventManager ]: Opening reader... " << std::endl;
+            std::cout << "[ EventManager ] Opening reader... " << std::endl;
         }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader();
         reader_->open(this->fileNames_);
         maxEvents_ = reader_->getNumberOfEvents();
         if (verbose_) {
-            std::cout << "[ EventManager ]: Max events set to " << maxEvents_ << std::endl;
+            std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
         }
         auto runHeader = reader_->readNextRunHeader();
         if (runHeader != nullptr) {
             runNumber_ = runHeader->getRunNumber();
         } else if (runHeader == nullptr) {
             if (verbose_) {
-                std::cout << "[ EventManager ]: Setting run number from first event ..." << std::endl;
+                std::cout << "[ EventManager ] Setting run number from first event ..." << std::endl;
             }
             auto event = reader_->readNextEvent();
             runNumber_ = event->getRunNumber();
             reader_->close();
             reader_->open(this->fileNames_);
             if (verbose_) {
-                std::cout << "[ EventManager ] : Done setting run number from first event!" << std::endl;
+                std::cout << "[ EventManager ] Done setting run number from first event!" << std::endl;
             }
         }
         if (verbose_) {
-            std::cout << "[ EventManager ]: Run number set to: " << runNumber_ << std::endl;
-            std::cout << "[ EventManager ]: Done opening reader!" << std::endl;
+            std::cout << "[ EventManager ] Run number set to: " << runNumber_ << std::endl;
+            std::cout << "[ EventManager ] Done opening reader!" << std::endl;
         }
     }
 
@@ -67,18 +67,17 @@ namespace hps {
     void EventManager::loadEvent(EVENT::LCEvent* event) {
         eve_->GetCurrentEvent()->DestroyElements();
         if (verbose_) {
-            std::cout << "[ EventManager ] : Loading LCIO event: " << event->getEventNumber() << std::endl;
+            std::cout << "[ EventManager ] Loading LCIO event: " << event->getEventNumber() << std::endl;
         }
         event_->build(eve_, event);
         if (verbose_) {
-            std::cout << "[ EventManager ] : Done loading event!" << std::endl;
+            std::cout << "[ EventManager ] Done loading event!" << std::endl;
         }
-        std::cout << std::endl;
     }
 
     void EventManager::GotoEvent(Int_t i) {
         if (i > maxEvents_ - 1) {
-            std::cerr << "[ EventManager ] : Event num " << i
+            std::cerr << "[ EventManager ] Event num " << i
                     << " is greater than max events " << maxEvents_
                     << " (command ignored) " << std::endl;
             return;
@@ -92,12 +91,12 @@ namespace hps {
         EVENT::LCEvent* event = nullptr;
         if (i == (eventNum_ + 1)) {
             if (verbose_) {
-                std::cout << "[ EventManager ] : Reading next event" << std::endl;
+                std::cout << "[ EventManager ] Reading next event" << std::endl;
             }
             event = reader_->readNextEvent();
         } else {
             if (verbose_) {
-                std::cout << "[ EventManager ] : Seeking event " << i
+                std::cout << "[ EventManager ] Seeking event " << i
                         << " with run number " << runNumber_ << std::endl;
             }
             event = reader_->readEvent(runNumber_, i);
@@ -106,22 +105,22 @@ namespace hps {
             loadEvent(event);
             eventNum_ = i;
         } else {
-            // Should not happen...
-            std::cerr << "[ EventManager ] : Read event is null! (ignoring command)" << std::endl;
+            // Should not happen normally...
+            std::cerr << "[ EventManager ] LCIO event is null! (ignoring command)" << std::endl;
         }
 
     }
 
     void EventManager::PrevEvent() {
         if (verbose_) {
-            std::cout << "[ EventManager ] : PrevEvent" << std::endl;
+            std::cout << "[ EventManager ] PrevEvent" << std::endl;
         }
         GotoEvent(eventNum_ - 1);
     }
 
     void EventManager::SetEventNumber() {
         if (verbose_) {
-            std::cout << "[ EventManager ] : Set event number: " << app_->getCurrentEventNumber() << std::endl;
+            std::cout << "[ EventManager ] Set event number: " << app_->getCurrentEventNumber() << std::endl;
         }
         GotoEvent(app_->getCurrentEventNumber());
     }

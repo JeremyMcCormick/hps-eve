@@ -18,7 +18,7 @@ namespace hps {
 
         public:
 
-            EventObjects(TGeoManager* geo, std::set<std::string> excludeColls);
+            EventObjects(TGeoManager* geo, std::set<std::string> excludeColls, int verbose = 0);
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
@@ -35,6 +35,8 @@ namespace hps {
             std::set<std::string> excludeColls_;
 
             TStyle ecalStyle_;
+
+            int verbose_;
     };
 }
 

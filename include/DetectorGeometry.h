@@ -16,7 +16,7 @@ namespace hps {
 
         public:
 
-            DetectorGeometry(TGeoManager* geo, TEveManager* eve);
+            DetectorGeometry(TGeoManager* geo, TEveManager* eve, int verbose = 0);
 
             /**
              * Utility function to convert a single TGeoNode into an Eve element.
@@ -48,6 +48,8 @@ namespace hps {
 
             TGeoManager* geo_;
             TEveManager* eve_;
+
+            int verbose_;
     };
 }
 

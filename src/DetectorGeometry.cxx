@@ -14,10 +14,16 @@
 
 namespace hps {
 
-    DetectorGeometry::DetectorGeometry(TGeoManager* geo, TEveManager* eve)
-        : geo_(geo), eve_(eve) {
+    DetectorGeometry::DetectorGeometry(TGeoManager* geo, TEveManager* eve, int verbose)
+        : geo_(geo), eve_(eve), verbose_(verbose) {
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Building detector..." << std::endl;
+        }
         addTracker();
         addEcal();
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Done building detector!" << std::endl;
+        }
     }
 
     TEveElementList* DetectorGeometry::createGeoElements(TGeoManager* geo,
@@ -47,19 +53,31 @@ namespace hps {
     }
 
     void DetectorGeometry::addTracker() {
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Adding tracker..." << std::endl;
+        }
         auto tracker = createGeoElements(geo_,
                                          "SVT",
                                          "/world_volume_1/tracking_volume_0/base_volume_0",
                                          "module_L");
         eve_->AddGlobalElement(tracker);
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Done adding tracker!" << std::endl;
+        }
     }
 
     void DetectorGeometry::addEcal() {
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Adding ECAL..." << std::endl;
+        }
         auto cal = createGeoElements(geo_,
                                      "ECAL",
                                      "/world_volume_1",
                                      "crystal_volume");
         eve_->AddGlobalElement(cal);
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Done adding ECAL!" << std::endl;
+        }
     }
 
     TEveElement* DetectorGeometry::toEveElement(TGeoManager* mgr, TGeoNode* node) {
