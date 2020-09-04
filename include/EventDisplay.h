@@ -20,7 +20,9 @@ namespace hps {
 
             EventDisplay(TEveManager* manager,
                          std::string geometryFile,
-                         std::vector<std::string> lcioFileList);
+                         std::vector<std::string> lcioFileList,
+                         std::set<std::string> excludeColls,
+                         int verbose = 0);
 
             ~EventDisplay();
 
@@ -41,6 +43,8 @@ namespace hps {
             std::string geometryFile_;
 
             TGNumberEntry* eventNumberEntry_;
+
+            int verbose_{0};
 
             ClassDef(EventDisplay, 1);
     };

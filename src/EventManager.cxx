@@ -12,15 +12,17 @@ namespace hps {
                                TGeoManager* geo,
                                EventDisplay* app,
                                std::vector<std::string> fileNames,
+                               std::set<std::string> excludeColls,
                                int verbose) :
             TEveEventManager("HPS Event Manager", ""),
             eve_(eve),
             geo_(geo),
             fileNames_(fileNames),
             reader_(nullptr),
-            event_(new EventObjects(geo)),
+            event_(new EventObjects(geo, excludeColls)),
             app_(app),
-            verbose_(verbose) {
+            verbose_(verbose),
+            excludeColls_(excludeColls) {
     }
 
     EventManager::~EventManager() {
@@ -100,8 +102,13 @@ namespace hps {
             }
             event = reader_->readEvent(runNumber_, i);
         }
-        loadEvent(event);
-        eventNum_ = i;
+        if (event != nullptr) {
+            loadEvent(event);
+            eventNum_ = i;
+        } else {
+            // Should not happen...
+            std::cerr << "[ EventManager ] : Read event is null! (ignoring command)" << std::endl;
+        }
 
     }
 

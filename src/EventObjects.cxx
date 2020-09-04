@@ -18,19 +18,22 @@ using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(TGeoManager* geo) :
-            geo_(geo) {
+    EventObjects::EventObjects(TGeoManager* geo, std::set<std::string> excludeColls) :
+            geo_(geo), excludeColls_(excludeColls) {
         ecalStyle_.SetPalette(kThermometer);
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
-        std::cout << "[ EventObjects ] : event pntr: " << event << std::endl;
         std::cout << "[ EventObjects ] : Set new LCIO event with event num: " << event->getEventNumber() << std::endl;
         const std::vector<std::string>* collNames = event->getCollectionNames();
         for (std::vector<std::string>::const_iterator it = collNames->begin();
                 it != collNames->end();
                 it++) {
             auto name = *it;
+            if (excludeCollection(name)) {
+                std::cout << "[ EventObjects ] : Ignoring excluded collection: " << name << std::endl;
+                continue;
+            }
             EVENT::LCCollection* coll = event->getCollection(name);
             TEveElementList* elements = nullptr;
             auto typeName = coll->getTypeName();
@@ -115,4 +118,9 @@ namespace hps {
         }
         return elements;
     }
+
+    bool EventObjects::excludeCollection(const std::string& collName) {
+        return excludeColls_.find(collName) != excludeColls_.end();
+    }
+
 } /* namespace hps */

@@ -18,9 +18,11 @@ namespace hps {
 
         public:
 
-            EventObjects(TGeoManager* geo);
+            EventObjects(TGeoManager* geo, std::set<std::string> excludeColls);
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
+
+            bool excludeCollection(const std::string& collName);
 
         private:
 
@@ -29,6 +31,8 @@ namespace hps {
             TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
 
             TGeoManager* geo_;
+
+            std::set<std::string> excludeColls_;
 
             TStyle ecalStyle_;
     };

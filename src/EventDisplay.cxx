@@ -31,28 +31,31 @@ ClassImp(hps::EventDisplay);
 
 namespace hps {
 
-
-
-    EventDisplay::EventDisplay(TEveManager* manager,
+    EventDisplay::EventDisplay(TEveManager *manager,
                                std::string geometryFile,
-                               std::vector<std::string> lcioFileList)
-            : TGMainFrame(gClient->GetRoot(), 320, 320),
-              geometryFile_(geometryFile),
-              lcioFileList_(lcioFileList),
-              manager_(manager),
-              eventManager_(nullptr),
-              eventNumberEntry_(nullptr) {
+                               std::vector<std::string> lcioFileList,
+                               std::set<std::string> excludeColls,
+                               int verbose) :
+            TGMainFrame (gClient->GetRoot (), 320, 320),
+            geometryFile_(geometryFile),
+            lcioFileList_(lcioFileList),
+            manager_(manager),
+            eventManager_(nullptr),
+            eventNumberEntry_(nullptr) {
 
         SetWindowName("HPS Event Display");
 
+        std::cout << "[ EventDisplay ]: Opening geometry file: " << this->geometryFile_ << std::endl;
         TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
-
         geo_ = new DetectorGeometry(gGeoManager, manager);
+        std::cout << "[ EventDisplay ]: Done opening geometry!" << std::endl;
 
+        // FIXME: Might be better to define this outside this class and pass as a pntr arg.
         eventManager_ = new EventManager(manager,
                                          gGeoManager,
                                          this,
                                          lcioFileList,
+                                         excludeColls,
                                          1 /* verbose lvl */);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();

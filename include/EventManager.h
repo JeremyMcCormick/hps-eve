@@ -26,6 +26,7 @@ namespace hps {
                          TGeoManager* geo,
                          EventDisplay* app,
                          std::vector<std::string> fileNames,
+                         std::set<std::string> excludeColls,
                          int verbose = 0);
 
             ~EventManager();
@@ -59,6 +60,7 @@ namespace hps {
 
             IO::LCReader* reader_;
             std::vector<std::string> fileNames_;
+            std::set<std::string> excludeColls_;
 
             int runNumber_{-1};
 
