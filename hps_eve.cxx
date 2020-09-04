@@ -52,13 +52,13 @@ int main (int argc, char **argv) {
 
     // Get Eve browser and embed it
     TEveBrowser *browser = manager->GetBrowser ();
-    browser->StartEmbedding (TRootBrowser::kLeft);
+    browser->StartEmbedding(TRootBrowser::kLeft);
 
     // Create the main event display class
     EventDisplay display(manager, geometryFile, lcioFileList);
 
     browser->SetTabTitle("Event Control", 0);
-    browser->StopEmbedding ();
+    browser->StopEmbedding();
 
     manager->FullRedraw3D();
 

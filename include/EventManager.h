@@ -16,11 +16,16 @@
 
 namespace hps {
 
+    class EventDisplay;
+
     class EventManager : public TEveEventManager {
 
         public:
 
-            EventManager(TEveManager* eve, TGeoManager* geo, std::vector<std::string> fileNames);
+            EventManager(TEveManager* eve,
+                         TGeoManager* geo,
+                         EventDisplay* app,
+                         std::vector<std::string> fileNames);
 
             ~EventManager();
 
@@ -29,18 +34,26 @@ namespace hps {
             void GotoEvent(Int_t i);
             void NextEvent();
             void PrevEvent();
+
+            /**
+             * Set event number from EventDisplay GUI.
+             */
+            void SetEventNumber();
+
+            /*
             void Close();
-
             void AfterNewEventLoaded();
-
             void AddNewEventCommand(const TString& cmd);
             void RemoveNewEventCommand(const TString& cmd);
             void ClearNewEventCommands();
+            */
 
         private:
 
             TEveManager* eve_;
             TGeoManager* geo_;
+            EventDisplay* app_;
+
             IO::LCReader* reader_;
             std::vector<std::string> fileNames_;
 

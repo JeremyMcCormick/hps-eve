@@ -7,6 +7,7 @@
 // ROOT
 #include "TGFrame.h"
 #include "TEveManager.h"
+#include "TGNumberEntry.h"
 
 // HPS
 #include "DetectorGeometry.h"
@@ -23,17 +24,23 @@ namespace hps {
 
             ~EventDisplay();
 
-            void NextEvent();
+            void GotoEvent(Int_t i);
+
+            /**
+             * Get current event number from GUI component.
+             */
+            int getCurrentEventNumber();
 
         private:
 
             TEveManager* manager_;
             TEveEventManager* eventManager_;
-
             DetectorGeometry* geo_;
 
             std::vector<std::string> lcioFileList_;
             std::string geometryFile_;
+
+            TGNumberEntry* eventNumberEntry_;
 
             ClassDef(EventDisplay, 1);
     };

@@ -2,17 +2,23 @@
 
 #include "IOIMPL/LCFactory.h"
 
+#include "EventDisplay.h"
+
 ClassImp(hps::EventManager);
 
 namespace hps {
 
-    EventManager::EventManager(TEveManager* eve, TGeoManager* geo, std::vector<std::string> fileNames) :
+    EventManager::EventManager(TEveManager* eve,
+                               TGeoManager* geo,
+                               EventDisplay* app,
+                               std::vector<std::string> fileNames) :
             TEveEventManager("HPS Event Manager", ""),
             eve_(eve),
             geo_(geo),
             fileNames_(fileNames),
             reader_(nullptr),
-            event_(new EventObjects(geo)) {
+            event_(new EventObjects(geo)),
+            app_(app) {
     }
 
     EventManager::~EventManager() {
@@ -46,26 +52,32 @@ namespace hps {
     }
 
     void EventManager::PrevEvent() {
-        std::cout << "EventManager::PrevEvent" << std::endl;
+        std::cout << "[ EventManager ] : PrevEvent" << std::endl;
     }
 
+    void EventManager::SetEventNumber() {
+        std::cout << "[ EventManager ] : Set event number from GUI: " << app_->getCurrentEventNumber() << std::endl;
+    }
+
+    /*
     void EventManager::Close() {
-        std::cout << "EventManager::Close" << std::endl;
+        std::cout << "[ EventManager ] : Close" << std::endl;
     }
 
     void EventManager::AfterNewEventLoaded() {
-        std::cout << "EventManager::AfterNewEventLoaded" << std::endl;
+        std::cout << "[ EventManager ] : AfterNewEventLoaded" << std::endl;
     }
 
     void EventManager::AddNewEventCommand(const TString& cmd) {
-        std::cout << "EventManager::AddNewEventCommand - " << cmd << std::endl;
+        std::cout << "[ EventManager ] : AddNewEventCommand - " << cmd << std::endl;
     }
 
     void EventManager::RemoveNewEventCommand(const TString& cmd) {
-        std::cout << "EventManager::RemoveNewEventCommand - " << cmd << std::endl;
+        std::cout << "[ EventManager ] : RemoveNewEventCommand - " << cmd << std::endl;
     }
 
     void EventManager::ClearNewEventCommands() {
-        std::cout << "EventManager::ClearNewEventCommands" << std::endl;
+        std::cout << "[ EventManager ] : ClearNewEventCommands" << std::endl;
     }
+    */
 }

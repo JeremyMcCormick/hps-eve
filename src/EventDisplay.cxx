@@ -21,10 +21,16 @@
 #include "TGFrame.h"
 #include "TGButton.h"
 #include "TEveEventManager.h"
+#include "TSystem.h"
+#include "TGButton.h"
+#include "TGLabel.h"
+#include "TGNumberEntry.h"
 
 ClassImp(hps::EventDisplay);
 
 namespace hps {
+
+
 
     EventDisplay::EventDisplay(TEveManager* manager,
                                std::string geometryFile,
@@ -33,7 +39,8 @@ namespace hps {
               geometryFile_(geometryFile),
               lcioFileList_(lcioFileList),
               manager_(manager),
-              eventManager_(nullptr) {
+              eventManager_(nullptr),
+              eventNumberEntry_(nullptr) {
 
         SetWindowName("HPS Event Display");
 
@@ -41,19 +48,54 @@ namespace hps {
 
         geo_ = new DetectorGeometry(gGeoManager, manager);
 
-        eventManager_ = new EventManager(manager, gGeoManager, lcioFileList);
+        eventManager_ = new EventManager(manager, gGeoManager, this, lcioFileList);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();
 
-        TGVerticalFrame* contents = new TGVerticalFrame(this, 1000, 1200);
-        TGHorizontalFrame* commandFrameNextEvent = new TGHorizontalFrame(contents, 100,0);
+        ///////////////////////////
+        // Start build GUI
+        ///////////////////////////
 
-        TGButton* buttonNext = new TGTextButton(commandFrameNextEvent, "Next Event >>>");
-        commandFrameNextEvent->AddFrame(buttonNext, new TGLayoutHints(kLHintsExpandX));
-        buttonNext->Connect("Pressed()", "hps::EventDisplay", this, "NextEvent()");
+        TGGroupFrame *frmEvent = new TGGroupFrame(this, "Event Navigation", kHorizontalFrame);
+        TGHorizontalFrame *hf = new TGHorizontalFrame(this);
+        frmEvent->AddFrame(hf);
 
-        contents->AddFrame(commandFrameNextEvent, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-        AddFrame(contents, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+        // TODO: get this dir from env var in a script configured by CMake
+        TString icondir(Form("%s/icons/", getenv("PWD")));
+        TGPictureButton* b = 0;
+
+        // Next event
+        b = new TGPictureButton (hf, gClient->GetPicture (icondir + "GoBack.gif"));
+        hf->AddFrame(b);
+        b->Connect ("Clicked()", "hps::EventManager", eventManager_, "PrevEvent()");
+
+        // Previous event
+        b = new TGPictureButton (hf, gClient->GetPicture (icondir + "GoForward.gif"));
+        hf->AddFrame(b);
+        b->Connect("Clicked()", "hps::EventManager", eventManager_, "NextEvent()");
+
+        // Go to event
+        TGHorizontalFrame* eventNrFrame = new TGHorizontalFrame(frmEvent);
+        TGLabel* eventNrLabel = new TGLabel(eventNrFrame, "  Go to \n  Event");
+        eventNumberEntry_ = new TGNumberEntry(eventNrFrame, 0, 5, -1,
+                                              TGNumberFormat::kNESInteger,
+                                              TGNumberFormat::kNEAAnyNumber,
+                                              TGNumberFormat::kNELLimitMinMax,
+                                              0, 100000); // TODO: Max should be based on current file
+        eventNrFrame->AddFrame(eventNrLabel);
+        eventNrFrame->AddFrame(eventNumberEntry_);
+        // This doesn't seem to work. New value is always 0.
+        //eventNumberEntry_->Connect("ValueSet(Long_t)", "hps::EventDisplay", this, "SetEventNumber()");
+        eventNumberEntry_->GetNumberEntry()->Connect(
+                "ReturnPressed()", "hps::EventManager", eventManager_, "SetEventNumber()");
+        frmEvent->AddFrame(eventNrFrame);
+
+        // Add event frame
+        AddFrame(frmEvent, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+        ///////////////////
+        // End build GUI
+        ///////////////////
 
         MapSubwindows();
         Resize(GetDefaultSize());
@@ -63,9 +105,7 @@ namespace hps {
     EventDisplay::~EventDisplay() {
     }
 
-    void EventDisplay::NextEvent() {
-        std::cout << "<<<< nextEvent" << std::endl;
-        eventManager_->NextEvent();
+    int EventDisplay::getCurrentEventNumber() {
+        return eventNumberEntry_->GetIntNumber();
     }
-
 } /* namespace hps */
