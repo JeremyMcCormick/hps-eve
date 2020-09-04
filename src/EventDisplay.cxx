@@ -68,4 +68,4 @@ namespace hps {
         eventManager_->NextEvent();
     }
 
-} /* namespace HPS */
+} /* namespace hps */

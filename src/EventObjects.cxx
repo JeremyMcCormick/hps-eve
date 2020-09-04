@@ -12,6 +12,7 @@
 // ROOT
 #include "TEveElement.h"
 #include "TEvePointSet.h"
+#include "TColor.h"
 
 using EVENT::LCIO;
 
@@ -19,6 +20,7 @@ namespace hps {
 
     EventObjects::EventObjects(TGeoManager* geo) :
             geo_(geo) {
+        ecalStyle_.SetPalette(kThermometer);
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
@@ -70,13 +72,31 @@ namespace hps {
     }
 
     TEveElementList* EventObjects::createSimCalorimeterHits(EVENT::LCCollection* coll) {
+        float min = 999;
+        float max = -999;
+        for (int i=0; i<coll->getNumberOfElements(); i++) {
+            EVENT::SimCalorimeterHit* hit = dynamic_cast<EVENT::SimCalorimeterHit*>(coll->getElementAt(i));
+            auto energy = hit->getEnergy();
+            if (energy < min) {
+                min = energy;
+            }
+            if (energy > max) {
+                max = energy;
+            }
+        }
+        std::cout << "[ EventObjects ] : ECAL min, max hit energy: " << min << ", " << max << std::endl;
+        min = min * 100;
+        max = max * 100;
+
         TEveElementList* elements = new TEveElementList();
         for (int i=0; i<coll->getNumberOfElements(); i++) {
             EVENT::SimCalorimeterHit* hit = dynamic_cast<EVENT::SimCalorimeterHit*>(coll->getElementAt(i));
+            auto energy = hit->getEnergy();
             auto pos = hit->getPosition();
             auto x = pos[0]/10.0;
             auto y = pos[1]/10.0;
             auto z = pos[2]/10.0;
+            auto hitTime = hit->getTimeCont(0);
             std::cout << "[ EventObjects ] : Looking for ECAL crystal at: ("
                     << x << ", " << y << ", " << z << ")" << std::endl;
             geo_->CdTop();
@@ -85,9 +105,14 @@ namespace hps {
                 std::cout << "[ EventObjects ] : Found geo node: " << node->GetName() << std::endl;
             }
             TEveElement* element = DetectorGeometry::toEveElement(geo_, node);
-            element->SetMainColor(2);
+            auto energyScaled = energy * 100;
+            element->SetMainColor(TColor::GetColorPalette((energyScaled - min)/(max - min) * gStyle->GetNumberOfColors()));
+            element->SetElementTitle(Form("Simulated Calorimeter Hit\n"
+                    "(x, y, z) = (%.3f, %.3f, %.3f)\n"
+                    "Time = %f, Energy = %E, Contribs = %d",
+                    x, y, z, hitTime, energy, hit->getNMCContributions()));
             elements->AddElement(element);
         }
         return elements;
     }
-}
+} /* namespace hps */

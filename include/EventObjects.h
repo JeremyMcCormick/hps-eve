@@ -7,6 +7,7 @@
 // ROOT
 #include "TEveManager.h"
 #include "TGeoManager.h"
+#include "TStyle.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -28,6 +29,8 @@ namespace hps {
             TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
 
             TGeoManager* geo_;
+
+            TStyle ecalStyle_;
     };
 }
 
