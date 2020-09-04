@@ -19,7 +19,10 @@ namespace hps {
 
         public:
 
-            EventObjects(TGeoManager* geo, std::set<std::string> excludeColls, int verbose = 0);
+            EventObjects(TGeoManager* geo,
+                         std::set<std::string> excludeColls,
+                         double bY,
+                         int verbose = 0);
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
@@ -43,6 +46,9 @@ namespace hps {
             std::set<std::string> excludeColls_;
 
             TStyle ecalStyle_;
+
+            // Fixed magnetic field Y component.
+            double bY_;
 
             int verbose_;
     };

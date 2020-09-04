@@ -22,6 +22,7 @@ namespace hps {
                          std::string geometryFile,
                          std::vector<std::string> lcioFileList,
                          std::set<std::string> excludeColls,
+                         double bY,
                          int verbose = 0);
 
             ~EventDisplay();

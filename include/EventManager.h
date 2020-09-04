@@ -27,6 +27,7 @@ namespace hps {
                          EventDisplay* app,
                          std::vector<std::string> fileNames,
                          std::set<std::string> excludeColls,
+                         double bY,
                          int verbose = 0);
 
             ~EventManager();

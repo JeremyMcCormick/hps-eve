@@ -19,15 +19,19 @@ int main (int argc, char **argv) {
     std::vector<std::string> lcioFileList;
     std::set<std::string> excludeColls;
     int verbose = 0;
+    double bY = 0.0;
 
     int c = 0;
-    while ((c = getopt (argc, argv, "e:g:v:")) != -1) {
+    while ((c = getopt (argc, argv, "b:e:g:v:")) != -1) {
         switch (c) {
             case 'g':
                 geometryFile = std::string(optarg);
                 break;
             case 'e':
                 excludeColls.insert(std::string(optarg));
+                break;
+            case 'b':
+                bY = std::stod(optarg);
                 break;
             case 'v':
                 verbose = atoi(optarg);
@@ -50,6 +54,26 @@ int main (int argc, char **argv) {
         throw std::runtime_error("Missing one or more LCIO files (provide as extra arguments)");
     }
 
+    std::cout << std::endl;
+    std::cout << "  -------- HPS Event Display -------- " << std::endl;
+    std::cout << "    verbose: " << verbose << std::endl;
+    std::cout << "    geometry: " << geometryFile << std::endl;
+    std::cout << "    files: " << std::endl;
+    for (std::vector<std::string>::iterator it = lcioFileList.begin();
+            it != lcioFileList.end();
+            it++) {
+        std::cout << "      " << *it << std::endl;
+    }
+    std::cout << "    exclude: " << std::endl;
+    for (std::set<std::string>::iterator it = excludeColls.begin();
+            it != excludeColls.end();
+            it++) {
+        std::cout << "      " << *it << std::endl;
+    }
+    std::cout << "    bY: " << bY << std::endl;
+    std::cout << "  -------------------------------- " << std::endl;
+    std::cout << std::endl;
+
     // Create ROOT intepreter app
     TRint *app = 0;
     app = new TRint("XXX", 0, 0);
@@ -62,7 +86,7 @@ int main (int argc, char **argv) {
     browser->StartEmbedding(TRootBrowser::kLeft);
 
     // Create the main event display class
-    EventDisplay display(manager, geometryFile, lcioFileList, excludeColls, verbose);
+    EventDisplay display(manager, geometryFile, lcioFileList, excludeColls, bY, verbose);
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();

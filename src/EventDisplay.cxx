@@ -35,6 +35,7 @@ namespace hps {
                                std::string geometryFile,
                                std::vector<std::string> lcioFileList,
                                std::set<std::string> excludeColls,
+                               double bY,
                                int verbose) :
             TGMainFrame (gClient->GetRoot (), 320, 320),
             geometryFile_(geometryFile),
@@ -55,12 +56,17 @@ namespace hps {
             std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
         }
 
+        if (bY == 0.0) {
+            std::cerr << "[ EventDisplay ] WARNING: The bY mag field value is zero!" << std::endl;
+        }
+
         // FIXME: Might be better to define this outside this class and pass as a pntr arg.
         eventManager_ = new EventManager(manager,
                                          gGeoManager,
                                          this,
                                          lcioFileList,
                                          excludeColls,
+                                         bY,
                                          verbose_);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();

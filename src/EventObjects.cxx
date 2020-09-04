@@ -23,8 +23,8 @@ using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(TGeoManager* geo, std::set<std::string> excludeColls, int verbose) :
-            geo_(geo), excludeColls_(excludeColls), verbose_(verbose) {
+    EventObjects::EventObjects(TGeoManager* geo, std::set<std::string> excludeColls, double bY, int verbose) :
+            geo_(geo), excludeColls_(excludeColls), verbose_(verbose), bY_(bY) {
         ecalStyle_.SetPalette(kThermometer);
     }
 
@@ -152,20 +152,17 @@ namespace hps {
     TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection* coll,
                                                   EVENT::LCCollection* simTrackerHits) {
 
-        //TEveElementList* elements = new TEveElementList();
-
         TEveCompound *mcTracks = new TEveCompound();
         mcTracks->SetMainColor(kRed);
-        mcTracks->SetName("MC Particles");
         mcTracks->OpenCompound();
 
         TEveTrackPropagator* propsetCharged = new TEveTrackPropagator();
-        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, -1.0, 0.0));
-        propsetCharged->SetDelta(0.01); // Step
+        std::cout << "[ EventObjects ] Setting up mag field with bY: " << bY_ << std::endl;
+        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
+        propsetCharged->SetDelta(0.01); // Step size
 
-        // from Druid
-        propsetCharged->SetMaxR(100);
-        propsetCharged->SetMaxZ(1000);
+        propsetCharged->SetMaxR(150);
+        propsetCharged->SetMaxZ(200);
         propsetCharged->SetMaxOrbs(10.0);
 
         propsetCharged->RefPMAtt().SetMarkerColor(kYellow);
@@ -187,11 +184,13 @@ namespace hps {
             double z = vertex[2];
             // Only look at charged gen particles for now...
             if (p->getGeneratorStatus() && charge != 0.0) {
-                std::cout << "[ EventObjects ] : Processing MCParticle: charge = " << charge
-                        << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3] << "); "
-                        << "momentum = (" << momentum[0] << ", " << momentum[1] << ", " << momentum[3] << ")"
-                        << "gen_status = " << p->getGeneratorStatus()
-                        << std::endl;
+                if (verbose_) {
+                    std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
+                            << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3] << "); "
+                            << "momentum = (" << momentum[0] << ", " << momentum[1] << ", " << momentum[3] << ")"
+                            << "gen_status = " << p->getGeneratorStatus()
+                            << std::endl;
+                }
 
                 TEveRecTrack* chargedTrack = new TEveRecTrack();
                 chargedTrack->fV.Set(TEveVector(x, y, z));
@@ -199,10 +198,14 @@ namespace hps {
                 chargedTrack->fSign = charge;
 
                 TEveTrack* track = new TEveTrack(chargedTrack, propsetCharged);
+                track->SetMainColor(kRed);
+
+                // Adding path marks commented out for now
+                /*
                 TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
                 TEvePathMark* pm2 = new TEvePathMark(TEvePathMark::kReference);
                 TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
-                track->SetMainColor(kRed);
+
 
                 std::vector<EVENT::SimTrackerHit*> particleHits;
                 findSimTrackerHits(particleHits, simTrackerHits, p);
@@ -221,17 +224,17 @@ namespace hps {
                         track->AddPathMark(*pm1);
                     }
                 }
-
+                */
+                track->SetRnrSelfChildren(true, true);
                 mcTracks->AddElement(track);
 
-                //TEveVector SetHit(hit->getPosition()[0]/10.0, hit->getPosition()[1]/10.0, hit->getPosition()[2]/10.0);
-                //pm1->fV.Set(SetHit);
-                //track->AddPathMark(*pm1);
-
-                std::cout << "[ EventObjects ] Done creating track!" << std::endl;
+                if (verbose_) {
+                    std::cout << "[ EventObjects ] Done creating track!" << std::endl;
+                }
             }
         }
         mcTracks->CloseCompound();
+        mcTracks->SetRnrSelfChildren(true, true);
         return mcTracks;
     }
 

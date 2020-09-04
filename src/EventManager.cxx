@@ -13,13 +13,14 @@ namespace hps {
                                EventDisplay* app,
                                std::vector<std::string> fileNames,
                                std::set<std::string> excludeColls,
+                               double bY,
                                int verbose) :
             TEveEventManager("HPS Event Manager", ""),
             eve_(eve),
             geo_(geo),
             fileNames_(fileNames),
             reader_(nullptr),
-            event_(new EventObjects(geo, excludeColls, verbose)),
+            event_(new EventObjects(geo, excludeColls, bY, verbose)),
             app_(app),
             verbose_(verbose),
             excludeColls_(excludeColls) {
@@ -108,7 +109,7 @@ namespace hps {
             // Should not happen normally...
             std::cerr << "[ EventManager ] LCIO event is null! (ignoring command)" << std::endl;
         }
-
+        eve_->FullRedraw3D(false);
     }
 
     void EventManager::PrevEvent() {
