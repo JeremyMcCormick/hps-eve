@@ -1,15 +1,15 @@
+#!/bin/sh
+
 if [ -z "$ROOTSYS" ]; then
     echo "ERROR: Set ROOTSYS in your environment before running!"
     return
 fi
-#. /work/slac/sw/cernroot/root-6.18.04-install/bin/thisroot.sh
-export LD_LIBRARY_PATH=@CMAKE_INSTALL_PREFIX@/lib:$LD_LIBRARY_PATH
+
+export HPS_EVE_DIR=@CMAKE_INSTALL_PREFIX@
+
+export LD_LIBRARY_PATH=${HPS_EVE_DIR}/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=@LCIO_DIR@/lib:$LD_LIBRARY_PATH
 
-export PATH=@CMAKE_INSTALL_PREFIX@/bin:$PATH
+export PATH=${HPS_EVE_DIR}/bin:$PATH
 
 which hps-eve
-
-#event_file=/work/slac/data/lcio/hpsForward_e+_0.5GeV_z-7.5_0_SLIC-v06-00-01_QGSP_BERT_HPS-PhysicsRun2019-v2-4pt5_recon.slcio
-
-#./install/bin/hps-eve -g ./HPS-PhysicsRun2019-v2-4pt5.gdml -v 1 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits $event_file
