@@ -83,7 +83,7 @@ namespace hps {
             TEvePointSet* p = new TEvePointSet(1);
             p->SetName("SimTrackerHit");
             p->SetMarkerStyle(kStar);
-            p->SetMarkerSize(0.5);
+            p->SetMarkerSize(0.2);
             p->SetPoint(0, x/10.0, y/10.0, z/10.0);
             p->SetMarkerColor(3);
             p->SetTitle(Form("Simulated Tracker Hit\n"
@@ -134,7 +134,7 @@ namespace hps {
                     std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
                 }
             } else {
-                std::cerr << "[ EventObjects ] No geo node found!" << std::endl;
+                std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit!" << std::endl;
                 continue;
             }
             TEveElement* element = DetectorGeometry::toEveElement(geo_, node);
@@ -164,20 +164,21 @@ namespace hps {
         TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
         std::cout << "[ EventObjects ] Setting up mag field with bY: " << bY_ << std::endl;
         propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
-        propsetCharged->SetDelta(0.01); // Step size
+        propsetCharged->SetDelta(0.01);
         propsetCharged->SetMaxR(150);
         propsetCharged->SetMaxZ(200);
-        propsetCharged->SetMaxOrbs(10.0); // ????
-        //propsetCharged->RefPMAtt().SetMarkerColor(kYellow);
-        //propsetCharged->RefPMAtt().SetMarkerStyle(kCircle);
-        //propsetCharged->RefPMAtt().SetMarkerSize(1.0);
+        propsetCharged->SetMaxOrbs(2.0);
+        //propsetCharged->SetRnrReferences(true);
+        //propsetCharged->RefPMAtt().SetMarkerColor(kRed);
+        //propsetCharged->RefPMAtt().SetMarkerStyle(kFullCircle);
+        //propsetCharged->RefPMAtt().SetMarkerSize(1);
 
         TEveTrackPropagator *propsetNeutral = new TEveTrackPropagator();
         propsetNeutral->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
-        propsetNeutral->SetDelta(0.01); // Step size
+        propsetNeutral->SetDelta(0.01);
         propsetNeutral->SetMaxR(150);
         propsetNeutral->SetMaxZ(200);
-        propsetNeutral->SetMaxOrbs(10.0); // ????
+        propsetNeutral->SetMaxOrbs(1.0);
 
         std::map<EVENT::MCParticle*, TEveCompound*> particleMap;
 
@@ -221,14 +222,19 @@ namespace hps {
                 std::cout << "[ EventObjects ] Adding charged track" << std::endl;
                 track->SetPropagator(propsetCharged);
                 track->SetMainColor(kRed);
-            }
-            else {
+                //track->SetMarkerColor(kRed);
+                //track->SetMarkerStyle(kFullCircle);
+                //track->SetMarkerSize(1);
+            } else {
                 std::cout << "[ EventObjects ] Adding neutral track" << std::endl;
                 track->SetPropagator(propsetNeutral);
                 track->SetMainColor(kYellow);
+                //track->SetMarkerColor(kYellow);
+                //track->SetMarkerStyle(kFullCircle);
+                //track->SetMarkerSize(1);
             }
 
-            compound->SetElementTitle(Form("MC Particle\n"
+            track->SetElementTitle(Form("MC Particle\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
                     "Charge = %.3f, Energy = %.3f",
@@ -236,37 +242,41 @@ namespace hps {
                     momentum[0], momentum[1], momentum[3],
                     charge, energy));
 
-            // Adding path marks commented out for now
-            /*
-             TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
-             TEvePathMark* pm2 = new TEvePathMark(TEvePathMark::kReference);
-             TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
+            //TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
+            //TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
 
-             std::vector<EVENT::SimTrackerHit*> particleHits;
-             findSimTrackerHits(particleHits, simTrackerHits, p);
-             if (particleHits.size() > 0) {
-             std::cout << "[ EventObjects ] : Found hits for particle: " << particleHits.size() << std::endl;
-             for (std::vector<EVENT::SimTrackerHit*>::iterator it = particleHits.begin();
-             it != particleHits.end();
-             it++) {
-             auto particleHit = *it;
-             const double* hitPosition = particleHit->getPosition();
-             TEveVector setHit(
-             (float) hitPosition[0]/10.0,
-             (float) hitPosition[1]/10.0,
-             (float) hitPosition[2]/10.0);
-             pm1->fV.Set(setHit);
-             track->AddPathMark(*pm1);
-             }
-             }
-             */
+            /*
+            std::vector<EVENT::SimTrackerHit*> particleHits;
+            findSimTrackerHits(particleHits, simTrackerHits, p);
+            if (particleHits.size() > 0) {
+                if (verbose_) {
+                    std::cout << "[ EventObjects ] Found hits for particle: " << particleHits.size() << std::endl;
+                }
+                for (std::vector<EVENT::SimTrackerHit*>::iterator it = particleHits.begin();
+                        it != particleHits.end(); it++) {
+                    auto simHit = *it;
+                    TEveVector hit(
+                            (float) simHit->getPosition()[0]/10.0,
+                            (float) simHit->getPosition()[1]/10.0,
+                            (float) simHit->getPosition()[2]/10.0);
+                    if (verbose_) {
+                        std::cout << "[ EventObjects ] Adding path mark at: ("
+                                << hit.fX << ", " << hit.fY << ", " << hit.fZ << ")"
+                                << std::endl;
+                    }
+                    TEvePathMark* pm = new TEvePathMark(TEvePathMark::kReference);
+                    pm->fV.Set(hit);
+                    track->AddPathMark(*pm);
+                }
+                track->SetRnrPoints(true);
+            }
+            */
 
             track->MakeTrack(false);
             compound->AddElement(track);
             compound->CloseCompound();
 
-            track->SetRnrSelfChildren(true, true);
-            //mcTracks->AddElement(compound);
+            //track->SetRnrSelfChildren(true, true);
 
             if (verbose_) {
                 std::cout << "[ EventObjects ] Done creating track!" << std::endl;
