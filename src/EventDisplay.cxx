@@ -79,8 +79,11 @@ namespace hps {
         TGHorizontalFrame *hf = new TGHorizontalFrame(this);
         frmEvent->AddFrame(hf);
 
-        // TODO: get this dir from env var in a script configured by CMake
-        TString icondir(Form("%s/icons/", getenv("PWD")));
+        auto homedir = getenv("HPS_EVE_DIR");
+        if (!homedir) {
+            throw std::runtime_error("HPS_EVE_DIR is not set!");
+        }
+        TString icondir(Form("%s/share/icons/", homedir));
         TGPictureButton* b = 0;
 
         // Next event
