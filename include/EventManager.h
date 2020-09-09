@@ -68,7 +68,7 @@ namespace hps {
             EventObjects* event_;
 
             int eventNum_{-1};
-            int maxEvents_{-1};
+            //int maxEvents_{999999};
 
             int verbose_;
 

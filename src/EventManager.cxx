@@ -36,10 +36,11 @@ namespace hps {
         }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader();
         reader_->open(this->fileNames_);
-        maxEvents_ = reader_->getNumberOfEvents();
-        if (verbose_) {
-            std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
-        }
+        // Doesn't work...returns 1 in a file with 1000+ events.
+        //maxEvents_ = reader_->getNumberOfEvents();
+        //if (verbose_) {
+        //    std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
+        //}
         auto runHeader = reader_->readNextRunHeader();
         if (runHeader != nullptr) {
             runNumber_ = runHeader->getRunNumber();
@@ -77,13 +78,15 @@ namespace hps {
     }
 
     void EventManager::GotoEvent(Int_t i) {
+        /*
         if (i > maxEvents_ - 1) {
             std::cerr << "[ EventManager ] Event num " << i
                     << " is greater than max events " << maxEvents_
                     << " (command ignored) " << std::endl;
             return;
-        } else if (i < 0) {
-            std::cerr << "[ EventManager ] Event num is not valid: " << i << std::endl;
+        } else*/
+        if (i < 0) {
+            std::cerr << "[ EventManager ] Event number is not valid: " << i << std::endl;
             return;
         } else if (i == eventNum_) {
             std::cerr << "[ EventManager ] Event is already loaded: " << i << std::endl;
@@ -94,20 +97,31 @@ namespace hps {
             if (verbose_) {
                 std::cout << "[ EventManager ] Reading next event" << std::endl;
             }
-            event = reader_->readNextEvent();
+            try {
+                event = reader_->readNextEvent();
+            } catch (IO::IOException& ioe) {
+                std::cerr << "[ EventManager ] [ ERROR ] " << ioe.what() << std::endl;
+            } catch (std::exception& e) {
+                std::cerr << "[ EventManager ] [ ERROR ] " << e.what() << std::endl;
+            }
         } else {
             if (verbose_) {
                 std::cout << "[ EventManager ] Seeking event " << i
                         << " with run number " << runNumber_ << std::endl;
             }
-            event = reader_->readEvent(runNumber_, i);
+            try {
+                event = reader_->readEvent(runNumber_, i);
+            } catch (IO::IOException& ioe) {
+                std::cerr << "[ EventManager ] [ ERROR ] " << ioe.what() << std::endl;
+            } catch (std::exception& e) {
+                std::cerr << "[ EventManager ] [ ERROR ] " << e.what() << std::endl;
+            }
         }
         if (event != nullptr) {
             loadEvent(event);
             eventNum_ = i;
         } else {
-            // Should not happen normally...
-            std::cerr << "[ EventManager ] LCIO event is null! (ignoring command)" << std::endl;
+            std::cerr << "[ EventManager ] Failed to read next event!" << std::endl;
         }
         eve_->FullRedraw3D(false);
     }
