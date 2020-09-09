@@ -6,3 +6,4 @@
 *.slcio
 fieldmap
 *.gdml
+*scratch*/
