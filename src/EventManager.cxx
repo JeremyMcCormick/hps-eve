@@ -34,9 +34,8 @@ namespace hps {
         if (verbose_) {
             std::cout << "[ EventManager ] Opening reader... " << std::endl;
         }
-        reader_ = IOIMPL::LCFactory::getInstance()->createLCReader();
+        reader_ = IOIMPL::LCFactory::getInstance()->createLCReader(IO::LCReader::directAccess);
         reader_->open(this->fileNames_);
-        // Doesn't work...returns 1 in a file with 1000+ events.
         //maxEvents_ = reader_->getNumberOfEvents();
         //if (verbose_) {
         //    std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
@@ -78,6 +77,7 @@ namespace hps {
     }
 
     void EventManager::GotoEvent(Int_t i) {
+        std::cout << "[ EventManager ] GotoEvent: " << i << std::endl;
         /*
         if (i > maxEvents_ - 1) {
             std::cerr << "[ EventManager ] Event num " << i
@@ -111,6 +111,9 @@ namespace hps {
             }
             try {
                 event = reader_->readEvent(runNumber_, i);
+                if (event == nullptr) {
+                    std::cerr << "[ EventManager ] [ ERROR ] Seeking failed!" << std::endl;
+                }
             } catch (IO::IOException& ioe) {
                 std::cerr << "[ EventManager ] [ ERROR ] " << ioe.what() << std::endl;
             } catch (std::exception& e) {
@@ -121,7 +124,7 @@ namespace hps {
             loadEvent(event);
             eventNum_ = i;
         } else {
-            std::cerr << "[ EventManager ] Failed to read next event!" << std::endl;
+            std::cerr << "[ EventManager ] [ ERROR ] Failed to read next event!" << std::endl;
         }
         eve_->FullRedraw3D(false);
     }
@@ -130,14 +133,24 @@ namespace hps {
         if (verbose_) {
             std::cout << "[ EventManager ] PrevEvent" << std::endl;
         }
-        GotoEvent(eventNum_ - 1);
+        if (eventNum_ > -1) {
+            GotoEvent(eventNum_ - 1);
+        } else {
+            std::cerr << "[ EventManager ] [ ERROR ] Already at first event!" << std::endl;
+        }
     }
 
     void EventManager::SetEventNumber() {
         if (verbose_) {
             std::cout << "[ EventManager ] Set event number: " << app_->getCurrentEventNumber() << std::endl;
         }
-        GotoEvent(app_->getCurrentEventNumber());
+        if (app_->getCurrentEventNumber() > -1) {
+            GotoEvent(app_->getCurrentEventNumber());
+        } else {
+            std::cerr << "[ EventManager ] [ ERROR ] Event number is not valid: "
+                    << app_->getCurrentEventNumber() << std::endl;
+
+        }
     }
 
     /*
