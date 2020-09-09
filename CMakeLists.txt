@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(hps-eve VERSION 0.0.1)
 
-if(NOT DEFINED ENV{ROOTSYS})
-    message(FATAL_ERROR "ROOTSYS was not defined in the environment.")
+if(DEFINED ENV{ROOTSYS})
+    list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 endif()
-list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+#message(FATAL_ERROR "ROOTSYS was not defined in the environment.")
 
 find_package(ROOT REQUIRED COMPONENTS Core Rint Geom Gui Eve)
 find_package(LCIO REQUIRED)
