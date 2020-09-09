@@ -1,5 +1,7 @@
-. /work/slac/sw/cernroot/root-6.18.04-install/bin/thisroot.sh
-export LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/work/slac/git/lcio-current/install/lib:$LD_LIBRARY_PATH
+#!/bin/sh
 
-./install/bin/hps-eve -g ./HPS-PhysicsRun2019-v1-4pt5.gdml -v 1 -b 1.034 -e HodoscopeHits -e TrackerHitsECal ./events.slcio
+. install/bin/hps-eve-env.sh
+
+event_file=/work/slac/data/lcio/hpsForward_e+_0.5GeV_z-7.5_0_SLIC-v06-00-01_QGSP_BERT_HPS-PhysicsRun2019-v2-4pt5_recon.slcio
+
+./install/bin/hps-eve -g ./HPS-PhysicsRun2019-v2-4pt5.gdml -v 1 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits $event_file
