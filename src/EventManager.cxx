@@ -132,10 +132,10 @@ namespace hps {
     }
 
     void EventManager::PrevEvent() {
-        if (verbose_) {
+        if (verbose_ > 1) {
             std::cout << "[ EventManager ] PrevEvent" << std::endl;
         }
-        if (eventNum_ > -1) {
+        if (eventNum_ > 0) {
             GotoEvent(eventNum_ - 1);
         } else {
             std::cerr << "[ EventManager ] [ ERROR ] Already at first event!" << std::endl;
