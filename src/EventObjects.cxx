@@ -150,93 +150,154 @@ namespace hps {
     }
 
     // REF: Druid src/BuildMCParticles.cc
-    TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection* coll,
-                                                  EVENT::LCCollection* simTrackerHits) {
+    TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection *coll,
+                                                  EVENT::LCCollection *simTrackerHits) {
+
+        std::cout << "[ EventObjects ] Building MCParticle collection with size: "
+                << coll->getNumberOfElements() << std::endl;
 
         TEveCompound *mcTracks = new TEveCompound();
-        mcTracks->SetMainColor(kRed);
+        //TEveTrackList* mcTracks = new TEveTrackList();
+        //mcTracks->SetMainColor(kRed);
         mcTracks->OpenCompound();
 
-        TEveTrackPropagator* propsetCharged = new TEveTrackPropagator();
+        TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
         std::cout << "[ EventObjects ] Setting up mag field with bY: " << bY_ << std::endl;
         propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
         propsetCharged->SetDelta(0.01); // Step size
-
         propsetCharged->SetMaxR(150);
         propsetCharged->SetMaxZ(200);
-        propsetCharged->SetMaxOrbs(10.0);
+        propsetCharged->SetMaxOrbs(10.0); // ????
+        //propsetCharged->RefPMAtt().SetMarkerColor(kYellow);
+        //propsetCharged->RefPMAtt().SetMarkerStyle(kCircle);
+        //propsetCharged->RefPMAtt().SetMarkerSize(1.0);
 
-        propsetCharged->RefPMAtt().SetMarkerColor(kYellow);
-        propsetCharged->RefPMAtt().SetMarkerStyle(kCircle);
-        propsetCharged->RefPMAtt().SetMarkerSize(1.0);
+        TEveTrackPropagator *propsetNeutral = new TEveTrackPropagator();
+        propsetNeutral->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
+        propsetNeutral->SetDelta(0.01); // Step size
+        propsetNeutral->SetMaxR(150);
+        propsetNeutral->SetMaxZ(200);
+        propsetNeutral->SetMaxOrbs(10.0); // ????
 
-        for (int i=0; i<coll->getNumberOfElements(); i++) {
-            EVENT::MCParticle* p = dynamic_cast<EVENT::MCParticle*>(coll->getElementAt(i));
+        std::map<EVENT::MCParticle*, TEveCompound*> particleMap;
+
+        for (int i = 0; i < coll->getNumberOfElements(); i++) {
+
+            TEveCompound *compound = new TEveCompound();
+            compound->OpenCompound();
+
+            EVENT::MCParticle *p = dynamic_cast<EVENT::MCParticle*>(coll->getElementAt(i));
+            particleMap[p] = compound;
+
             float charge = p->getCharge();
+            double energy = p->getEnergy();
             //const double* endpoint = p->getEndpoint();
-            const double* momentum = p->getMomentum();
-            const double* vertex = p->getVertex();
+            const double *momentum = p->getMomentum();
+            const double *vertex = p->getVertex();
 
             double px = momentum[0];
             double py = momentum[1];
             double pz = momentum[2];
-            double x = vertex[0];
-            double y = vertex[1];
-            double z = vertex[2];
-            // Only look at charged gen particles for now...
-            if (p->getGeneratorStatus() && charge != 0.0) {
-                if (verbose_) {
-                    std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
-                            << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3] << "); "
-                            << "momentum = (" << momentum[0] << ", " << momentum[1] << ", " << momentum[3] << ")"
-                            << "gen_status = " << p->getGeneratorStatus()
-                            << std::endl;
-                }
 
-                TEveRecTrack* chargedTrack = new TEveRecTrack();
-                chargedTrack->fV.Set(TEveVector(x, y, z));
-                chargedTrack->fP.Set(px, py, pz);
-                chargedTrack->fSign = charge;
+            double x = vertex[0]/10.0;
+            double y = vertex[1]/10.0;
+            double z = vertex[2]/10.0;
 
-                TEveTrack* track = new TEveTrack(chargedTrack, propsetCharged);
+            if (verbose_) {
+                std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
+                        << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3]
+                        << "); " << "momentum = (" << momentum[0] << ", " << momentum[1] << ", "
+                        << momentum[3] << "); " << "gen_status = " << p->getGeneratorStatus()
+                        << std::endl;
+            }
+
+            TEveRecTrack *recTrack = new TEveRecTrack();
+            recTrack->fV.Set(TEveVector(x, y, z));
+            recTrack->fP.Set(px, py, pz);
+            recTrack->fSign = charge;
+
+            TEveTrack *track = new TEveTrack(recTrack, nullptr);
+            if (charge != 0.0) {
+                std::cout << "[ EventObjects ] Adding charged track" << std::endl;
+                track->SetPropagator(propsetCharged);
                 track->SetMainColor(kRed);
+            }
+            else {
+                std::cout << "[ EventObjects ] Adding neutral track" << std::endl;
+                track->SetPropagator(propsetNeutral);
+                track->SetMainColor(kYellow);
+            }
 
-                // Adding path marks commented out for now
-                /*
-                TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
-                TEvePathMark* pm2 = new TEvePathMark(TEvePathMark::kReference);
-                TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
+            compound->SetElementTitle(Form("MC Particle\n"
+                    "(x, y, z) = (%.3f, %.3f, %.3f)\n"
+                    "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
+                    "Charge = %.3f, Energy = %.3f",
+                    vertex[0], vertex[1], vertex[2],
+                    momentum[0], momentum[1], momentum[3],
+                    charge, energy));
 
+            // Adding path marks commented out for now
+            /*
+             TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
+             TEvePathMark* pm2 = new TEvePathMark(TEvePathMark::kReference);
+             TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
 
-                std::vector<EVENT::SimTrackerHit*> particleHits;
-                findSimTrackerHits(particleHits, simTrackerHits, p);
-                if (particleHits.size() > 0) {
-                    std::cout << "[ EventObjects ] : Found hits for particle: " << particleHits.size() << std::endl;
-                    for (std::vector<EVENT::SimTrackerHit*>::iterator it = particleHits.begin();
-                            it != particleHits.end();
-                            it++) {
-                        auto particleHit = *it;
-                        const double* hitPosition = particleHit->getPosition();
-                        TEveVector setHit(
-                                (float) hitPosition[0]/10.0,
-                                (float) hitPosition[1]/10.0,
-                                (float) hitPosition[2]/10.0);
-                        pm1->fV.Set(setHit);
-                        track->AddPathMark(*pm1);
-                    }
-                }
-                */
-                track->SetRnrSelfChildren(true, true);
-                track->MakeTrack(true);
-                mcTracks->AddElement(track);
+             std::vector<EVENT::SimTrackerHit*> particleHits;
+             findSimTrackerHits(particleHits, simTrackerHits, p);
+             if (particleHits.size() > 0) {
+             std::cout << "[ EventObjects ] : Found hits for particle: " << particleHits.size() << std::endl;
+             for (std::vector<EVENT::SimTrackerHit*>::iterator it = particleHits.begin();
+             it != particleHits.end();
+             it++) {
+             auto particleHit = *it;
+             const double* hitPosition = particleHit->getPosition();
+             TEveVector setHit(
+             (float) hitPosition[0]/10.0,
+             (float) hitPosition[1]/10.0,
+             (float) hitPosition[2]/10.0);
+             pm1->fV.Set(setHit);
+             track->AddPathMark(*pm1);
+             }
+             }
+             */
 
-                if (verbose_) {
-                    std::cout << "[ EventObjects ] Done creating track!" << std::endl;
-                }
+            track->MakeTrack(false);
+            compound->AddElement(track);
+            compound->CloseCompound();
+
+            track->SetRnrSelfChildren(true, true);
+            //mcTracks->AddElement(compound);
+
+            if (verbose_) {
+                std::cout << "[ EventObjects ] Done creating track!" << std::endl;
             }
         }
-        mcTracks->CloseCompound();
+
+        for (auto it = particleMap.begin(); it != particleMap.end(); it++) {
+            auto p = it->first;
+            auto c = it->second;
+            if (p->getParents().size() > 0) {
+                auto fnd = particleMap.find(p->getParents()[0]);
+                if (fnd != particleMap.end()) {
+                    auto parCompound = fnd->second;
+                    parCompound->OpenCompound();
+                    parCompound->AddElement(c);
+                    parCompound->CloseCompound();
+                } else {
+                    std::cerr << "[ EventObjects ] [ ERROR ] Failed to find parent compound object!" << std::endl;
+                }
+            } else {
+                // Top-level particles with no parents.
+                mcTracks->AddElement(c);
+            }
+        }
+
         mcTracks->SetRnrSelfChildren(true, true);
+        mcTracks->CloseCompound();
+
+        if (verbose_) {
+            std::cout << "[ EventObjects ] Done building MCParticle collection!" << std::endl;
+        }
         return mcTracks;
     }
 

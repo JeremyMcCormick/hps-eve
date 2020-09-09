@@ -8,6 +8,7 @@
 #include "TEveManager.h"
 #include "TGeoManager.h"
 #include "TStyle.h"
+#include "TEveTrack.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
