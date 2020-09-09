@@ -13,6 +13,20 @@
 
 using hps::EventDisplay;
 
+void print_usage(const char* msg = 0, bool doExit = true, int returnCode = 1) {
+    std::cout << "Usage: hps-eve [args] [LCIO files]" << std::endl;
+    std::cout << "    -g [gdml file]" << std::endl;
+    std::cout << "    -b [bY]" << std::endl;
+    std::cout << "    -v [verbose]" << std::endl;
+    std::cout << "    -e [exclude coll]" << std::endl;
+    if (msg) {
+        std::cout << msg << std::endl;
+    }
+    if (doExit) {
+        exit(returnCode);
+    }
+}
+
 int main (int argc, char **argv) {
 
     std::string geometryFile;
@@ -36,6 +50,9 @@ int main (int argc, char **argv) {
             case 'v':
                 verbose = atoi(optarg);
                 break;
+            case 'h':
+                print_usage();
+                break;
             case '?':
                 std::cout << optopt << std::endl;
                 break;
@@ -47,11 +64,11 @@ int main (int argc, char **argv) {
     }
 
     if (geometryFile.length () == 0) {
-        throw std::runtime_error ("Missing name of geometry file (provide with '-g' switch)");
+        print_usage("Missing name of geometry file (provide with '-g' switch)");
     }
 
     if (lcioFileList.size () == 0) {
-        throw std::runtime_error("Missing one or more LCIO files (provide as extra arguments)");
+        print_usage("Missing one or more LCIO files (provide as extra arguments)");
     }
 
     std::cout << std::endl;
