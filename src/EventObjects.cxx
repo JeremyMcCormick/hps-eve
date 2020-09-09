@@ -61,6 +61,7 @@ namespace hps {
                 if (verbose_) {
                     std::cout << "[ EventObjects ] Adding elements: " << name << std::endl;
                 }
+                elements->SetPickableRecursively(true);
                 manager->AddElement(elements);
             }
         }
@@ -226,6 +227,7 @@ namespace hps {
                 }
                 */
                 track->SetRnrSelfChildren(true, true);
+                track->MakeTrack(true);
                 mcTracks->AddElement(track);
 
                 if (verbose_) {
