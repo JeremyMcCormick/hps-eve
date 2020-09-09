@@ -38,7 +38,7 @@ target_link_libraries(hps-eve
     ROOT::Eve)
 install(TARGETS hps-eve hps-eve DESTINATION bin)
 
-configure_file( ${PROJECT_SOURCE_DIR}/scripts/hps-eve-env.sh.in ${CMAKE_CURRENT_BINARY_DIR}/hps-eve-env.sh)
+configure_file( ${PROJECT_SOURCE_DIR}/scripts/hps-eve-env.sh.in ${CMAKE_CURRENT_BINARY_DIR}/hps-eve-env.sh @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/hps-eve-env.sh DESTINATION bin
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
