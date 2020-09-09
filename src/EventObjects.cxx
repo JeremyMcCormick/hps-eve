@@ -30,7 +30,7 @@ namespace hps {
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
         if (verbose_) {
-            std::cout << "[ EventObjects ] Set new LCIO event with event num: " << event->getEventNumber() << std::endl;
+            std::cout << "[ EventObjects ] Set new LCIO event: " << event->getEventNumber() << std::endl;
         }
 
         EVENT::LCCollection* simTrackerHits = event->getCollection("TrackerHits");
@@ -78,10 +78,9 @@ namespace hps {
             auto x = hit->getPosition()[0];
             auto y = hit->getPosition()[1];
             auto z = hit->getPosition()[2];
-            auto dEdx = hit->getdEdx();
+            auto edep = hit->getEDep();
             auto hitTime = hit->getTime();
             TEvePointSet* p = new TEvePointSet(1);
-            p->SetName("SimTrackerHit");
             p->SetMarkerStyle(kStar);
             p->SetMarkerSize(0.2);
             p->SetPoint(0, x/10.0, y/10.0, z/10.0);
@@ -89,7 +88,7 @@ namespace hps {
             p->SetTitle(Form("Simulated Tracker Hit\n"
                               "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                               "Time = %f, dEdx = %E",
-                              x, y, z, hitTime, dEdx));
+                              x, y, z, hitTime, edep));
             elements->AddElement(p);
         }
         return elements;
@@ -108,7 +107,7 @@ namespace hps {
                 max = energy;
             }
         }
-        if (verbose_) {
+        if (verbose_ > 1) {
             std::cout << "[ EventObjects ] ECAL min, max hit energy: " << min << ", " << max << std::endl;
         }
         min = min * 100;
@@ -123,14 +122,14 @@ namespace hps {
             auto y = pos[1]/10.0;
             auto z = pos[2]/10.0;
             auto hitTime = hit->getTimeCont(0);
-            if (verbose_) {
+            if (verbose_ > 3) {
                 std::cout << "[ EventObjects ] Looking for ECAL crystal at: ("
                         << x << ", " << y << ", " << z << ")" << std::endl;
             }
             geo_->CdTop();
             TGeoNode* node = geo_->FindNode((double)x, (double)y, (double)z);
             if (node != nullptr) {
-                if (verbose_) {
+                if (verbose_ > 3) {
                     std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
                 }
             } else {
@@ -149,12 +148,14 @@ namespace hps {
         return elements;
     }
 
-    // REF: Druid src/BuildMCParticles.cc
+    // Based on Druid src/BuildMCParticles.cc
     TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection *coll,
                                                   EVENT::LCCollection *simTrackerHits) {
 
-        std::cout << "[ EventObjects ] Building MCParticle collection with size: "
+        if (verbose_) {
+            std::cout << "[ EventObjects ] Building MCParticle collection with size: "
                 << coll->getNumberOfElements() << std::endl;
+        }
 
         TEveCompound *mcTracks = new TEveCompound();
         //TEveTrackList* mcTracks = new TEveTrackList();
@@ -162,7 +163,7 @@ namespace hps {
         mcTracks->OpenCompound();
 
         TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
-        std::cout << "[ EventObjects ] Setting up mag field with bY: " << bY_ << std::endl;
+
         propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
         propsetCharged->SetDelta(0.01);
         propsetCharged->SetMaxR(150);
@@ -204,7 +205,7 @@ namespace hps {
             double y = vertex[1]/10.0;
             double z = vertex[2]/10.0;
 
-            if (verbose_) {
+            if (verbose_ > 3) {
                 std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
                         << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3]
                         << "); " << "momentum = (" << momentum[0] << ", " << momentum[1] << ", "
@@ -219,14 +220,18 @@ namespace hps {
 
             TEveTrack *track = new TEveTrack(recTrack, nullptr);
             if (charge != 0.0) {
-                std::cout << "[ EventObjects ] Adding charged track" << std::endl;
+                if (verbose_ > 3) {
+                    std::cout << "[ EventObjects ] Adding charged track" << std::endl;
+                }
                 track->SetPropagator(propsetCharged);
                 track->SetMainColor(kRed);
                 //track->SetMarkerColor(kRed);
                 //track->SetMarkerStyle(kFullCircle);
                 //track->SetMarkerSize(1);
             } else {
-                std::cout << "[ EventObjects ] Adding neutral track" << std::endl;
+                if (verbose_ > 3) {
+                    std::cout << "[ EventObjects ] Adding neutral track" << std::endl;
+                }
                 track->SetPropagator(propsetNeutral);
                 track->SetMainColor(kYellow);
                 //track->SetMarkerColor(kYellow);
@@ -275,12 +280,6 @@ namespace hps {
             track->MakeTrack(false);
             compound->AddElement(track);
             compound->CloseCompound();
-
-            //track->SetRnrSelfChildren(true, true);
-
-            if (verbose_) {
-                std::cout << "[ EventObjects ] Done creating track!" << std::endl;
-            }
         }
 
         for (auto it = particleMap.begin(); it != particleMap.end(); it++) {

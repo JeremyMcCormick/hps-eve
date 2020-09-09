@@ -77,7 +77,9 @@ namespace hps {
     }
 
     void EventManager::GotoEvent(Int_t i) {
-        std::cout << "[ EventManager ] GotoEvent: " << i << std::endl;
+        if (verbose_) {
+            std::cout << "[ EventManager ] GotoEvent: " << i << std::endl;
+        }
         /*
         if (i > maxEvents_ - 1) {
             std::cerr << "[ EventManager ] Event num " << i
