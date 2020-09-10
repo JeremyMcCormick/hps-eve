@@ -33,27 +33,26 @@ namespace hps {
 
     EventDisplay::EventDisplay(TEveManager *manager,
                                std::string geometryFile,
+                               std::string cacheDir,
                                std::vector<std::string> lcioFileList,
                                std::set<std::string> excludeColls,
-                               double bY,
-                               int verbose) :
+                               double bY) :
             TGMainFrame (gClient->GetRoot (), 320, 320),
             lcioFileList_(lcioFileList),
             manager_(manager),
             eventManager_(nullptr),
-            eventNumberEntry_(nullptr),
-            verbose_(verbose) {
+            eventNumberEntry_(nullptr) {
 
         SetWindowName("HPS Event Display");
 
         //TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
-        det_ = new DetectorGeometry(manager, verbose_);
+        det_ = new DetectorGeometry(manager, cacheDir);
         if (geometryFile.size() > 0) {
-            if (verbose_) {
+            if (checkVerbosity(1)) {
                 std::cout << "[ EventDisplay ] Opening geometry file: " << geometryFile << std::endl;
             }
             det_->loadDetectorFile(geometryFile);
-            if (verbose_) {
+            if (checkVerbosity(1)) {
                 std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
             }
         }
@@ -68,8 +67,7 @@ namespace hps {
                                          this,
                                          lcioFileList,
                                          excludeColls,
-                                         bY,
-                                         verbose_);
+                                         bY);
         manager_->AddEvent(eventManager_);
         eventManager_->Open();
 
@@ -129,5 +127,11 @@ namespace hps {
 
     int EventDisplay::getCurrentEventNumber() {
         return eventNumberEntry_->GetIntNumber();
+    }
+
+    void EventDisplay::setVerbosity(int verbosity) {
+        Verbosity::setVerbosity(verbosity);
+        det_->setVerbosity(verbosity);
+        eventManager_->setVerbosity(verbosity);
     }
 } /* namespace hps */

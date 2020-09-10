@@ -23,13 +23,13 @@ using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(DetectorGeometry* det, std::set<std::string> excludeColls, double bY, int verbose) :
-            det_(det), excludeColls_(excludeColls), verbose_(verbose), bY_(bY) {
+    EventObjects::EventObjects(DetectorGeometry* det, std::set<std::string> excludeColls, double bY) :
+            det_(det), excludeColls_(excludeColls), bY_(bY) {
         ecalStyle_.SetPalette(kThermometer);
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
-        if (verbose_) {
+        if (checkVerbosity()) {
             std::cout << "[ EventObjects ] Set new LCIO event: " << event->getEventNumber() << std::endl;
         }
 
@@ -41,7 +41,7 @@ namespace hps {
                 it++) {
             auto name = *it;
             if (excludeCollection(name)) {
-                if (verbose_) {
+                if (checkVerbosity(1)) {
                     std::cout << "[ EventObjects ] Ignoring excluded collection: " << name << std::endl;
                 }
                 continue;
@@ -58,13 +58,16 @@ namespace hps {
             }
             if (elements != nullptr) {
                 elements->SetElementName(name.c_str());
-                if (verbose_) {
+                if (checkVerbosity(1)) {
                     std::cout << "[ EventObjects ] Adding elements: " << name << std::endl;
                 }
                 elements->SetPickableRecursively(true);
                 manager->AddElement(elements);
             }
         }
+    }
+
+    EventObjects::~EventObjects() {
     }
 
     bool EventObjects::excludeCollection(const std::string& collName) {
@@ -107,7 +110,7 @@ namespace hps {
                 max = energy;
             }
         }
-        if (verbose_ > 1) {
+        if (checkVerbosity(2)) {
             std::cout << "[ EventObjects ] ECAL min, max hit energy: " << min << ", " << max << std::endl;
         }
         min = min * 100;
@@ -123,14 +126,14 @@ namespace hps {
             auto y = pos[1]/10.0;
             auto z = pos[2]/10.0;
             auto hitTime = hit->getTimeCont(0);
-            if (verbose_ > 3) {
+            if (checkVerbosity(4)) {
                 std::cout << "[ EventObjects ] Looking for ECAL crystal at: ("
                         << x << ", " << y << ", " << z << ")" << std::endl;
             }
             geo->CdTop();
             TGeoNode* node = geo->FindNode((double)x, (double)y, (double)z);
             if (node != nullptr) {
-                if (verbose_ > 3) {
+                if (checkVerbosity(4)) {
                     std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
                 }
             } else {
@@ -153,7 +156,7 @@ namespace hps {
     TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection *coll,
                                                   EVENT::LCCollection *simTrackerHits) {
 
-        if (verbose_) {
+        if (checkVerbosity(2)) {
             std::cout << "[ EventObjects ] Building MCParticle collection with size: "
                 << coll->getNumberOfElements() << std::endl;
         }
@@ -206,7 +209,7 @@ namespace hps {
             double y = vertex[1]/10.0;
             double z = vertex[2]/10.0;
 
-            if (verbose_ > 3) {
+            if (checkVerbosity(4)) {
                 std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
                         << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3]
                         << "); " << "momentum = (" << momentum[0] << ", " << momentum[1] << ", "
@@ -221,7 +224,7 @@ namespace hps {
 
             TEveTrack *track = new TEveTrack(recTrack, nullptr);
             if (charge != 0.0) {
-                if (verbose_ > 3) {
+                if (checkVerbosity(4)) {
                     std::cout << "[ EventObjects ] Adding charged track" << std::endl;
                 }
                 track->SetPropagator(propsetCharged);
@@ -230,7 +233,7 @@ namespace hps {
                 //track->SetMarkerStyle(kFullCircle);
                 //track->SetMarkerSize(1);
             } else {
-                if (verbose_ > 3) {
+                if (checkVerbosity(4)) {
                     std::cout << "[ EventObjects ] Adding neutral track" << std::endl;
                 }
                 track->SetPropagator(propsetNeutral);
@@ -305,7 +308,7 @@ namespace hps {
         mcTracks->SetRnrSelfChildren(true, true);
         mcTracks->CloseCompound();
 
-        if (verbose_) {
+        if (checkVerbosity(2)) {
             std::cout << "[ EventObjects ] Done building MCParticle collection!" << std::endl;
         }
         return mcTracks;

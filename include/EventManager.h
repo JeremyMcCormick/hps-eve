@@ -18,7 +18,7 @@ namespace hps {
 
     class EventDisplay;
 
-    class EventManager : public TEveEventManager {
+    class EventManager : public TEveEventManager, public Verbosity {
 
         public:
 
@@ -27,10 +27,9 @@ namespace hps {
                          EventDisplay* app,
                          std::vector<std::string> fileNames,
                          std::set<std::string> excludeColls,
-                         double bY,
-                         int verbose = 0);
+                         double bY);
 
-            ~EventManager();
+            virtual ~EventManager();
 
             void Open();
 
@@ -42,6 +41,8 @@ namespace hps {
              * Set event number from EventDisplay GUI.
              */
             void SetEventNumber();
+
+            void setVerbosity(int verbosity);
 
             /*
             void Close();
@@ -70,8 +71,6 @@ namespace hps {
 
             int eventNum_{-1};
             //int maxEvents_{999999};
-
-            int verbose_;
 
             ClassDef(EventManager, 1);
     };

@@ -1,6 +1,9 @@
 #ifndef HPS_EVENTOBJECTS_H_
 #define HPS_EVENTOBJECTS_H_ 1
 
+// HPS
+#include "Verbosity.h"
+
 // LCIO
 #include "EVENT/LCEvent.h"
 
@@ -18,14 +21,15 @@ namespace hps {
 
     class DetectorGeometry;
 
-    class EventObjects {
+    class EventObjects : public Verbosity {
 
         public:
 
             EventObjects(DetectorGeometry* det,
                          std::set<std::string> excludeColls,
-                         double bY,
-                         int verbose = 0);
+                         double bY);
+
+            virtual ~EventObjects();
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
@@ -55,8 +59,6 @@ namespace hps {
 
             // Fixed magnetic field Y component.
             double bY_;
-
-            int verbose_;
     };
 }
 

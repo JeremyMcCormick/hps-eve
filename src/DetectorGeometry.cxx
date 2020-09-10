@@ -3,6 +3,8 @@
 // C++ standard library
 #include <iostream>
 #include <stdexcept>
+#include <sys/stat.h>
+#include <fstream>
 
 // ROOT
 #include "TEveElement.h"
@@ -106,8 +108,14 @@ void extractGdmlFile(const char* lcddName, const char* gdmlName) {
 
 namespace hps {
 
-    DetectorGeometry::DetectorGeometry(TEveManager* eve, int verbose)
-        : geo_(nullptr), eve_(eve), verbose_(verbose) {
+    DetectorGeometry::DetectorGeometry(TEveManager* eve, std::string cacheDir)
+        : geo_(nullptr),
+          eve_(eve),
+          fileCache_(new FileCache(cacheDir)) {
+    }
+
+    DetectorGeometry::~DetectorGeometry() {
+        delete fileCache_;
     }
 
     TEveElementList* DetectorGeometry::createGeoElements(TGeoManager* geo,
@@ -137,7 +145,7 @@ namespace hps {
     }
 
     void DetectorGeometry::addTracker() {
-        if (verbose_) {
+        if (checkVerbosity()) {
             std::cout << "[ DetectorGeometry ] Adding tracker..." << std::endl;
         }
         auto tracker = createGeoElements(geo_,
@@ -145,13 +153,13 @@ namespace hps {
                                          "/world_volume_1/tracking_volume_0/base_volume_0",
                                          "module_L");
         eve_->AddGlobalElement(tracker);
-        if (verbose_) {
+        if (checkVerbosity()) {
             std::cout << "[ DetectorGeometry ] Done adding tracker!" << std::endl;
         }
     }
 
     void DetectorGeometry::addEcal() {
-        if (verbose_) {
+        if (checkVerbosity()) {
             std::cout << "[ DetectorGeometry ] Adding ECAL..." << std::endl;
         }
         auto cal = createGeoElements(geo_,
@@ -159,7 +167,7 @@ namespace hps {
                                      "/world_volume_1",
                                      "crystal_volume");
         eve_->AddGlobalElement(cal);
-        if (verbose_) {
+        if (checkVerbosity()) {
             std::cout << "[ DetectorGeometry ] Done adding ECAL!" << std::endl;
         }
     }
@@ -179,51 +187,60 @@ namespace hps {
         return geo_;
     }
 
+    // Include guards are just here for the compilation.
+    // We will never get to this method if curl and libxml2 were not enabled.
     void DetectorGeometry::loadDetector(const std::string& detName) {
+
         std::cout << "[ DetectorGeometry ] Loading detector: " << detName << std::endl;
 
-        // Example URL:
-        // https://raw.githubusercontent.com/JeffersonLab/hps-java/master/detector-data/detectors/HPS-PhysicsRun2019-v2-4pt5/HPS-PhysicsRun2019-v2-4pt5.lcdd
-        std::string detUrl = BASE_DETECTOR_URL + "/" + detName + "/" + detName + std::string(".lcdd");
+        std::string lcddName = detName + ".lcdd";
+        std::string gdmlName = detName + ".gdml";
 
-        std::cout << "[ DetectorGeometry] Downloading: " << detUrl << std::endl;
-
+        if (!fileCache_->isCached(lcddName)) {
+            std::string detUrl = BASE_DETECTOR_URL + "/" + detName + "/" + detName + std::string(".lcdd");
+            std::cout << "[ DetectorGeometry ] Downloading: " << detUrl << std::endl;
 #ifdef HAVE_CURL
-        download(detUrl.c_str(), std::string(detName + std::string(".lcdd")).c_str());
+            download(detUrl.c_str(),
+                     fileCache_->getCachedPath(lcddName).c_str());
+#endif
+            if (!fileCache_->isCached(lcddName)) {
+                throw std::runtime_error("Failed to cache LCDD file.");
+            }
+        }
 
+        std::cout << "[ DetectorGeometry ] Extracting GDML file from: " << lcddName << std::endl;
+        if (!fileCache_->isCached(gdmlName)) {
 #ifdef HAVE_LIBXML2
-        std::string fileName = detName + ".lcdd";
-        std::cout << "[ DetectorGeometry ] Extracting GDML file from: " << fileName << std::endl;
-        std::string gdmlFile = detName + ".gdml";
-        extractGdmlFile(fileName.c_str(), gdmlFile.c_str());
-        std::cout << "[ DetectorGeometry ] Done extracting GDML file!" << std::endl;
-
-        loadDetectorFile(gdmlFile.c_str());
-
-#else
-        std::cerr << "[ DetectorGeometry ] [ ERROR ] Could not extract GDML file. LibXml2 was not enabled!" << std::endl;
+            extractGdmlFile(fileCache_->getCachedPath(lcddName).c_str(),
+                            fileCache_->getCachedPath(gdmlName).c_str());
 #endif
+            std::cout << "[ DetectorGeometry ] Done extracting GDML file!" << std::endl;
+        } else {
+            std::cout << "[ DetectorGeometry ] GDML file was already in cache: "
+                    << fileCache_->getCachedPath(gdmlName) << std::endl;
+        }
 
-#else
-        std::cerr << "[ DetectorGeometry ] [ ERROR ] Could not download detector file. CURL was not enabled!" << std::endl;
-#endif
+        loadDetectorFile(fileCache_->getCachedPath(gdmlName));
 
         std::cout << "[ DetectorGeometry ] Done loading detector!" << std::endl;
     }
 
     void DetectorGeometry::loadDetectorFile(const std::string& gdmlName) {
+        if (checkVerbosity()) {
+            std::cout << "[ DetectorGeometry ] Loading GDML file: " << gdmlName << std::endl;
+        }
         geo_ = TGeoManager::Import(gdmlName.c_str());
+        if (checkVerbosity()) {
+            std::cout << "[ DetectorGeometry ] Building detector..." << gdmlName << std::endl;
+        }
         buildDetector();
+        if (checkVerbosity()) {
+            std::cout << "[ DetectorGeometry ] Done building detector!" << std::endl;
+        }
     }
 
     void DetectorGeometry::buildDetector() {
-        if (verbose_) {
-            std::cout << "[ DetectorGeometry ] Building detector..." << std::endl;
-        }
         addTracker();
         addEcal();
-        if (verbose_) {
-            std::cout << "[ DetectorGeometry ] Done building detector!" << std::endl;
-        }
     }
 }

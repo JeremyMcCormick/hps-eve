@@ -1,6 +1,10 @@
 #ifndef HPS_DETECTORGEOMETRY_H_
 #define HPS_DETECTORGEOMETRY_H_ 1
 
+// HPS
+#include "FileCache.h"
+#include "Verbosity.h"
+
 // C++ standard library
 #include <map>
 
@@ -28,11 +32,13 @@ static void extractGdmlFile(const char* lcddName, const char* gdmlName);
 
 namespace hps {
 
-    class DetectorGeometry {
+    class DetectorGeometry : public Verbosity {
 
         public:
 
-            DetectorGeometry(TEveManager* eve, int verbose = 0);
+            DetectorGeometry(TEveManager* eve, std::string cacheDir);
+
+            ~DetectorGeometry();
 
             /**
              * Utility function to convert a single TGeoNode into an Eve element.
@@ -76,7 +82,7 @@ namespace hps {
             std::string BASE_DETECTOR_URL{
                 "https://raw.githubusercontent.com/JeffersonLab/hps-java/master/detector-data/detectors"};
 
-            int verbose_;
+            FileCache* fileCache_;
     };
 }
 

@@ -19,6 +19,9 @@ void print_usage(const char* msg = 0, bool doExit = true, int returnCode = 1) {
     std::cout << "    -b [bY]" << std::endl;
     std::cout << "    -v [verbose]" << std::endl;
     std::cout << "    -e [exclude coll]" << std::endl;
+    std::cout << "    -c [cache dir]" << std::endl;
+    std::cout << "GDML file is required if curl and libxml2 were not enabled." << std::endl;
+    std::cout << "One or more LCIO files are required." << std::endl;
     if (msg) {
         std::cout << msg << std::endl;
     }
@@ -32,11 +35,12 @@ int main (int argc, char **argv) {
     std::string geometryFile;
     std::vector<std::string> lcioFileList;
     std::set<std::string> excludeColls;
+    std::string cacheDir(".cache");
     int verbose = 0;
     double bY = 0.0;
 
     int c = 0;
-    while ((c = getopt (argc, argv, "b:e:g:v:")) != -1) {
+    while ((c = getopt (argc, argv, "b:e:g:v:c:")) != -1) {
         switch (c) {
             case 'g':
                 geometryFile = std::string(optarg);
@@ -49,6 +53,9 @@ int main (int argc, char **argv) {
                 break;
             case 'v':
                 verbose = atoi(optarg);
+                break;
+            case 'c':
+                cacheDir = std::string(optarg);
                 break;
             case 'h':
                 print_usage();
@@ -63,12 +70,15 @@ int main (int argc, char **argv) {
         lcioFileList.push_back (std::string (argv[index]));
     }
 
-    //if (geometryFile.length () == 0) {
-    //    print_usage("Missing name of geometry file (provide with '-g' switch)");
-    //}
+    // In case curl and libxml2 were not both enabled, a GDML file must be provided on the command line.
+#if !defined(HAVE_CURL) || !defined(HAVE_LIBXML2)
+    if (geometryFile.length () == 0) {
+        print_usage("ERROR: Missing name of geometry file (provide with '-g' switch or compile with curl/libxml2 support)");
+    }
+#endif
 
     if (lcioFileList.size () == 0) {
-        print_usage("Missing one or more LCIO files (provide as extra arguments)");
+        print_usage("ERROR: Missing one or more LCIO files (provide as extra arguments)");
     }
 
     std::cout << std::endl;
@@ -88,6 +98,7 @@ int main (int argc, char **argv) {
         std::cout << "      " << *it << std::endl;
     }
     std::cout << "    bY: " << bY << std::endl;
+    std::cout << "    cache dir: " << cacheDir << std::endl;
     std::cout << "  -------------------------------- " << std::endl;
     std::cout << std::endl;
 
@@ -103,7 +114,13 @@ int main (int argc, char **argv) {
     browser->StartEmbedding(TRootBrowser::kLeft);
 
     // Create the main event display class
-    EventDisplay display(manager, geometryFile, lcioFileList, excludeColls, bY, verbose);
+    EventDisplay display(manager,
+                         geometryFile,
+                         cacheDir,
+                         lcioFileList,
+                         excludeColls,
+                         bY);
+    display.setVerbosity(verbose);
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();

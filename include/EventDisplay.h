@@ -14,18 +14,20 @@
 
 namespace hps {
 
-    class EventDisplay : public TGMainFrame {
+    class EventManager;
+
+    class EventDisplay : public TGMainFrame, public Verbosity {
 
         public:
 
             EventDisplay(TEveManager* manager,
                          std::string geometryFile,
+                         std::string cacheDir,
                          std::vector<std::string> lcioFileList,
                          std::set<std::string> excludeColls,
-                         double bY,
-                         int verbose = 0);
+                         double bY);
 
-            ~EventDisplay();
+            virtual ~EventDisplay();
 
             void GotoEvent(Int_t i);
 
@@ -34,17 +36,17 @@ namespace hps {
              */
             int getCurrentEventNumber();
 
+            void setVerbosity(int verbosity);
+
         private:
 
             TEveManager* manager_;
-            TEveEventManager* eventManager_;
+            EventManager* eventManager_;
             DetectorGeometry* det_;
 
             std::vector<std::string> lcioFileList_;
 
             TGNumberEntry* eventNumberEntry_;
-
-            int verbose_;
 
             ClassDef(EventDisplay, 1);
     };
