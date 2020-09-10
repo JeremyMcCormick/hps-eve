@@ -38,7 +38,6 @@ namespace hps {
                                double bY,
                                int verbose) :
             TGMainFrame (gClient->GetRoot (), 320, 320),
-            geometryFile_(geometryFile),
             lcioFileList_(lcioFileList),
             manager_(manager),
             eventManager_(nullptr),
@@ -47,22 +46,25 @@ namespace hps {
 
         SetWindowName("HPS Event Display");
 
-        if (verbose_) {
-            std::cout << "[ EventDisplay ] Opening geometry file: " << this->geometryFile_ << std::endl;
-        }
-        TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
-        geo_ = new DetectorGeometry(gGeoManager, manager, verbose_);
-        if (verbose_) {
-            std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
+        //TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
+        det_ = new DetectorGeometry(manager, verbose_);
+        if (geometryFile.size() > 0) {
+            if (verbose_) {
+                std::cout << "[ EventDisplay ] Opening geometry file: " << geometryFile << std::endl;
+            }
+            det_->loadDetectorFile(geometryFile);
+            if (verbose_) {
+                std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
+            }
         }
 
         if (bY == 0.0) {
-            std::cerr << "[ EventDisplay ] WARNING: The bY mag field value is zero!" << std::endl;
+            std::cerr << "[ EventDisplay ] [ ERROR ] The fixed B-field value is zero!" << std::endl;
         }
 
         // FIXME: Might be better to define this outside this class and pass as a pntr arg.
         eventManager_ = new EventManager(manager,
-                                         gGeoManager,
+                                         det_,
                                          this,
                                          lcioFileList,
                                          excludeColls,

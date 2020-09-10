@@ -12,18 +12,102 @@
 #include "TEveEventManager.h"
 #include "TEveScene.h"
 
+#ifdef HAVE_CURL
+
+#include <curl/curl.h>
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+  size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
+  return written;
+}
+
+void download(const char* url, const char* outfile)
+{
+    CURL *curl;
+    CURLcode res;
+    FILE *pagefile;
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    curl = curl_easy_init();
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+    /* send all data to this function  */
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+
+    /* open the file */
+    pagefile = fopen(outfile, "wb");
+    if(pagefile) {
+
+        /* write the page body to this file handle */
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, pagefile);
+
+        /* get it! */
+        curl_easy_perform(curl);
+
+        /* close the header file */
+        fclose(pagefile);
+     }
+
+    /* cleanup curl stuff */
+    curl_easy_cleanup(curl);
+
+    curl_global_cleanup();
+}
+
+#endif
+
+#ifdef HAVE_LIBXML2
+void extractGdmlFile(const char* lcddName, const char* gdmlName) {
+
+    xmlDocPtr doc = xmlParseFile(lcddName);
+    if (doc == NULL) {
+        throw std::runtime_error("Failed to open LCDD file.");
+    }
+    xmlNode *root = xmlDocGetRootElement(doc);
+
+    xmlNode *cur = NULL;
+    xmlNode *gdml = NULL;
+    for (cur = root->children; cur; cur = cur->next) {
+        if (cur->type == XML_ELEMENT_NODE) {
+            if (xmlStrEqual(cur->name, BAD_CAST "gdml")) {
+                gdml = cur;
+                break;
+            }
+        }
+    }
+
+    xmlDocPtr gdmlDoc = xmlNewDoc(BAD_CAST "1.0");
+    xmlDocSetRootElement(gdmlDoc, gdml);
+
+    FILE* gdmlFile = fopen(gdmlName, "wb");
+
+    if (gdmlFile) {
+        xmlDocDump(gdmlFile, gdmlDoc);
+    } else {
+        throw std::runtime_error("Failed to create new GDML file.");
+    }
+
+    fclose(gdmlFile);
+
+    if (doc) {
+        xmlFreeDoc(doc);
+    }
+
+    xmlCleanupParser();
+}
+
+
+#endif
+
 namespace hps {
 
-    DetectorGeometry::DetectorGeometry(TGeoManager* geo, TEveManager* eve, int verbose)
-        : geo_(geo), eve_(eve), verbose_(verbose) {
-        if (verbose_) {
-            std::cout << "[ DetectorGeometry ] Building detector..." << std::endl;
-        }
-        addTracker();
-        addEcal();
-        if (verbose_) {
-            std::cout << "[ DetectorGeometry ] Done building detector!" << std::endl;
-        }
+    DetectorGeometry::DetectorGeometry(TEveManager* eve, int verbose)
+        : geo_(nullptr), eve_(eve), verbose_(verbose) {
     }
 
     TEveElementList* DetectorGeometry::createGeoElements(TGeoManager* geo,
@@ -89,5 +173,57 @@ namespace hps {
         shape->SetMainTransparency(vol->GetTransparency());
         shape->RefMainTrans().SetFrom(*mgr->GetCurrentMatrix());
         return shape;
+    }
+
+    TGeoManager* DetectorGeometry::getGeoManager() {
+        return geo_;
+    }
+
+    void DetectorGeometry::loadDetector(const std::string& detName) {
+        std::cout << "[ DetectorGeometry ] Loading detector: " << detName << std::endl;
+
+        // Example URL:
+        // https://raw.githubusercontent.com/JeffersonLab/hps-java/master/detector-data/detectors/HPS-PhysicsRun2019-v2-4pt5/HPS-PhysicsRun2019-v2-4pt5.lcdd
+        std::string detUrl = BASE_DETECTOR_URL + "/" + detName + "/" + detName + std::string(".lcdd");
+
+        std::cout << "[ DetectorGeometry] Downloading: " << detUrl << std::endl;
+
+#ifdef HAVE_CURL
+        download(detUrl.c_str(), std::string(detName + std::string(".lcdd")).c_str());
+
+#ifdef HAVE_LIBXML2
+        std::string fileName = detName + ".lcdd";
+        std::cout << "[ DetectorGeometry ] Extracting GDML file from: " << fileName << std::endl;
+        std::string gdmlFile = detName + ".gdml";
+        extractGdmlFile(fileName.c_str(), gdmlFile.c_str());
+        std::cout << "[ DetectorGeometry ] Done extracting GDML file!" << std::endl;
+
+        loadDetectorFile(gdmlFile.c_str());
+
+#else
+        std::cerr << "[ DetectorGeometry ] [ ERROR ] Could not extract GDML file. LibXml2 was not enabled!" << std::endl;
+#endif
+
+#else
+        std::cerr << "[ DetectorGeometry ] [ ERROR ] Could not download detector file. CURL was not enabled!" << std::endl;
+#endif
+
+        std::cout << "[ DetectorGeometry ] Done loading detector!" << std::endl;
+    }
+
+    void DetectorGeometry::loadDetectorFile(const std::string& gdmlName) {
+        geo_ = TGeoManager::Import(gdmlName.c_str());
+        buildDetector();
+    }
+
+    void DetectorGeometry::buildDetector() {
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Building detector..." << std::endl;
+        }
+        addTracker();
+        addEcal();
+        if (verbose_) {
+            std::cout << "[ DetectorGeometry ] Done building detector!" << std::endl;
+        }
     }
 }

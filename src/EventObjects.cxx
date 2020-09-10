@@ -23,8 +23,8 @@ using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(TGeoManager* geo, std::set<std::string> excludeColls, double bY, int verbose) :
-            geo_(geo), excludeColls_(excludeColls), verbose_(verbose), bY_(bY) {
+    EventObjects::EventObjects(DetectorGeometry* det, std::set<std::string> excludeColls, double bY, int verbose) :
+            det_(det), excludeColls_(excludeColls), verbose_(verbose), bY_(bY) {
         ecalStyle_.SetPalette(kThermometer);
     }
 
@@ -113,6 +113,7 @@ namespace hps {
         min = min * 100;
         max = max * 100;
 
+        TGeoManager* geo = det_->getGeoManager();
         TEveElementList* elements = new TEveElementList();
         for (int i=0; i<coll->getNumberOfElements(); i++) {
             EVENT::SimCalorimeterHit* hit = dynamic_cast<EVENT::SimCalorimeterHit*>(coll->getElementAt(i));
@@ -126,8 +127,8 @@ namespace hps {
                 std::cout << "[ EventObjects ] Looking for ECAL crystal at: ("
                         << x << ", " << y << ", " << z << ")" << std::endl;
             }
-            geo_->CdTop();
-            TGeoNode* node = geo_->FindNode((double)x, (double)y, (double)z);
+            geo->CdTop();
+            TGeoNode* node = geo->FindNode((double)x, (double)y, (double)z);
             if (node != nullptr) {
                 if (verbose_ > 3) {
                     std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
@@ -136,7 +137,7 @@ namespace hps {
                 std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit!" << std::endl;
                 continue;
             }
-            TEveElement* element = DetectorGeometry::toEveElement(geo_, node);
+            TEveElement* element = DetectorGeometry::toEveElement(geo, node);
             auto energyScaled = energy * 100;
             element->SetMainColor(TColor::GetColorPalette((energyScaled - min)/(max - min) * gStyle->GetNumberOfColors()));
             element->SetElementTitle(Form("Simulated Calorimeter Hit\n"

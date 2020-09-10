@@ -9,7 +9,7 @@ ClassImp(hps::EventManager);
 namespace hps {
 
     EventManager::EventManager(TEveManager* eve,
-                               TGeoManager* geo,
+                               DetectorGeometry* det,
                                EventDisplay* app,
                                std::vector<std::string> fileNames,
                                std::set<std::string> excludeColls,
@@ -17,10 +17,10 @@ namespace hps {
                                int verbose) :
             TEveEventManager("HPS Event Manager", ""),
             eve_(eve),
-            geo_(geo),
+            det_(det),
             fileNames_(fileNames),
             reader_(nullptr),
-            event_(new EventObjects(geo, excludeColls, bY, verbose)),
+            event_(new EventObjects(det, excludeColls, bY, verbose)),
             app_(app),
             verbose_(verbose),
             excludeColls_(excludeColls) {
@@ -41,6 +41,10 @@ namespace hps {
         //    std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
         //}
         auto runHeader = reader_->readNextRunHeader();
+        auto detName = runHeader->getDetectorName();
+
+        det_->loadDetector(detName);
+
         if (runHeader != nullptr) {
             runNumber_ = runHeader->getRunNumber();
         } else if (runHeader == nullptr) {

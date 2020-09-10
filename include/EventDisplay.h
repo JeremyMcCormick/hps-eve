@@ -38,10 +38,9 @@ namespace hps {
 
             TEveManager* manager_;
             TEveEventManager* eventManager_;
-            DetectorGeometry* geo_;
+            DetectorGeometry* det_;
 
             std::vector<std::string> lcioFileList_;
-            std::string geometryFile_;
 
             TGNumberEntry* eventNumberEntry_;
 

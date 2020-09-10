@@ -16,11 +16,13 @@
 
 namespace hps {
 
+    class DetectorGeometry;
+
     class EventObjects {
 
         public:
 
-            EventObjects(TGeoManager* geo,
+            EventObjects(DetectorGeometry* det,
                          std::set<std::string> excludeColls,
                          double bY,
                          int verbose = 0);
@@ -42,7 +44,10 @@ namespace hps {
                                            EVENT::LCCollection* hits,
                                            EVENT::MCParticle* p);
 
-            TGeoManager* geo_;
+        private:
+
+            //TGeoManager* geo_;
+            DetectorGeometry* det_;
 
             std::set<std::string> excludeColls_;
 

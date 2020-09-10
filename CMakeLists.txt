@@ -9,6 +9,24 @@ endif()
 find_package(ROOT REQUIRED COMPONENTS Core Rint Geom Gui Eve)
 find_package(LCIO REQUIRED)
 
+find_package(CURL)
+if(CURL_FOUND)
+    message(STATUS "CURL found at: ${CURL_LIBRARIES}")
+    add_definitions(-DHAVE_CURL)
+    include_directories(${CURL_INCLUDE_DIRS})
+else()
+    message(STATUS "CURL not found")
+endif()
+
+find_package(LibXml2)
+if(LIBXML2_FOUND)
+    message(STATUS "LibXml2 found at: ${LIBXML2_LIBRARIES}")
+    add_definitions(-DHAVE_LIBXML2)
+    include_directories(${LIBXML2_INCLUDE_DIRS})
+else()
+    message(STATUS "LibXml2 not found")
+endif()
+
 include(${ROOT_USE_FILE})
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -26,8 +44,10 @@ file(GLOB_RECURSE library_sources ${PROJECT_SOURCE_DIR}/src/*.cxx)
 add_library(EventDisplay SHARED EventDisplayDic.cxx ${library_sources})
 install(TARGETS EventDisplay LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
+set(exec_name hps-eve)
+
 add_executable(hps-eve ${library_sources} ${PROJECT_SOURCE_DIR}/hps_eve.cxx)
-target_link_libraries(hps-eve
+target_link_libraries(${exec_name}
     ${LCIO_LCIO_LIBRARY}
     ${LCIO_SIO_LIBRARY}
     EventDisplay
@@ -36,7 +56,13 @@ target_link_libraries(hps-eve
     ROOT::Geom
     ROOT::Gui
     ROOT::Eve)
-install(TARGETS hps-eve hps-eve DESTINATION bin)
+if(CURL_FOUND)
+    target_link_libraries(${exec_name} ${CURL_LIBRARIES})
+endif()
+if(LIBXML2_FOUND)
+    target_link_libraries(${exec_name} ${LIBXML2_LIBRARIES})
+endif()
+install(TARGETS ${exec_name} ${exec_name} DESTINATION bin)
 
 configure_file( ${PROJECT_SOURCE_DIR}/scripts/hps-eve-env.sh.in ${CMAKE_CURRENT_BINARY_DIR}/hps-eve-env.sh @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/hps-eve-env.sh DESTINATION bin

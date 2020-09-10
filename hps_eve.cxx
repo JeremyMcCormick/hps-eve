@@ -63,9 +63,9 @@ int main (int argc, char **argv) {
         lcioFileList.push_back (std::string (argv[index]));
     }
 
-    if (geometryFile.length () == 0) {
-        print_usage("Missing name of geometry file (provide with '-g' switch)");
-    }
+    //if (geometryFile.length () == 0) {
+    //    print_usage("Missing name of geometry file (provide with '-g' switch)");
+    //}
 
     if (lcioFileList.size () == 0) {
         print_usage("Missing one or more LCIO files (provide as extra arguments)");

@@ -6,4 +6,5 @@
 *.slcio
 fieldmap
 *.gdml
+*.lcdd
 *scratch*/

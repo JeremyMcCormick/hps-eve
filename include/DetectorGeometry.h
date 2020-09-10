@@ -10,20 +10,44 @@
 #include "TEveGeoNode.h"
 #include "TEveElement.h"
 
+#ifdef HAVE_CURL
+
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
+
+static void download(const char* url, const char* filename);
+
+#endif
+
+#ifdef HAVE_LIBXML2
+
+#include <libxml/xmlreader.h>
+
+static void extractGdmlFile(const char* lcddName, const char* gdmlName);
+
+#endif
+
 namespace hps {
 
     class DetectorGeometry {
 
         public:
 
-            DetectorGeometry(TGeoManager* geo, TEveManager* eve, int verbose = 0);
+            DetectorGeometry(TEveManager* eve, int verbose = 0);
 
             /**
              * Utility function to convert a single TGeoNode into an Eve element.
              */
             static TEveElement* toEveElement(TGeoManager* mgr, TGeoNode* node);
 
+            TGeoManager* getGeoManager();
+
+            void loadDetector(const std::string& detName);
+
+            void loadDetectorFile(const std::string& gdmlName);
+
         private:
+
+            void buildDetector();
 
             /**
              * Create a list of Eve geometry elements from the children of a
@@ -48,6 +72,9 @@ namespace hps {
 
             TGeoManager* geo_;
             TEveManager* eve_;
+
+            std::string BASE_DETECTOR_URL{
+                "https://raw.githubusercontent.com/JeffersonLab/hps-java/master/detector-data/detectors"};
 
             int verbose_;
     };
