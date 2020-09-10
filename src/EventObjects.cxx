@@ -42,7 +42,7 @@ namespace hps {
                 it++) {
             auto name = *it;
             if (app_->excludeCollection(name)) {
-                if (checkVerbosity(1)) {
+                if (checkVerbosity(2)) {
                     std::cout << "[ EventObjects ] Ignoring excluded collection: " << name << std::endl;
                 }
                 continue;
@@ -59,7 +59,7 @@ namespace hps {
             }
             if (elements != nullptr) {
                 elements->SetElementName(name.c_str());
-                if (checkVerbosity(1)) {
+                if (checkVerbosity(2)) {
                     std::cout << "[ EventObjects ] Adding elements: " << name << std::endl;
                 }
                 elements->SetPickableRecursively(true);

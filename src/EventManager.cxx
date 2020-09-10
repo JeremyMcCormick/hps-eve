@@ -23,7 +23,7 @@ namespace hps {
     }
 
     void EventManager::Open() {
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] Opening reader... " << std::endl;
         }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader(IO::LCReader::directAccess);
@@ -49,7 +49,7 @@ namespace hps {
                 std::cout << "[ EventManager ] Done setting run number from first event!" << std::endl;
             }
         }
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] Run number set to: " << runNumber_ << std::endl;
             std::cout << "[ EventManager ] Done opening reader!" << std::endl;
         }
@@ -71,7 +71,7 @@ namespace hps {
     }
 
     void EventManager::GotoEvent(Int_t i) {
-        if (checkVerbosity()) {
+        if (checkVerbosity(2)) {
             std::cout << "[ EventManager ] GotoEvent: " << i << std::endl;
         }
         if (i < 0) {
@@ -83,7 +83,7 @@ namespace hps {
         }
         EVENT::LCEvent* event = nullptr;
         if (i == (eventNum_ + 1)) {
-            if (checkVerbosity()) {
+            if (checkVerbosity(2)) {
                 std::cout << "[ EventManager ] Reading next event" << std::endl;
             }
             try {
@@ -94,7 +94,7 @@ namespace hps {
                 std::cerr << "[ EventManager ] [ ERROR ] " << e.what() << std::endl;
             }
         } else {
-            if (checkVerbosity()) {
+            if (checkVerbosity(3)) {
                 std::cout << "[ EventManager ] Seeking event " << i
                         << " with run number " << runNumber_ << std::endl;
             }
@@ -119,7 +119,7 @@ namespace hps {
     }
 
     void EventManager::PrevEvent() {
-        if (checkVerbosity()) {
+        if (checkVerbosity(2)) {
             std::cout << "[ EventManager ] PrevEvent" << std::endl;
         }
         if (eventNum_ > 0) {
@@ -130,7 +130,7 @@ namespace hps {
     }
 
     void EventManager::SetEventNumber() {
-        if (checkVerbosity()) {
+        if (checkVerbosity(2)) {
             std::cout << "[ EventManager ] Set event number: " << app_->getCurrentEventNumber() << std::endl;
         }
         if (app_->getCurrentEventNumber() > -1) {
