@@ -31,6 +31,8 @@ ClassImp(hps::EventDisplay);
 
 namespace hps {
 
+    EventDisplay* EventDisplay::instance_ = nullptr;
+
     EventDisplay::EventDisplay(TEveManager *manager,
                                std::string geometryFile,
                                std::string cacheDir,
@@ -152,6 +154,23 @@ namespace hps {
 
     bool EventDisplay::excludeCollection(const std::string& collName) {
         return excludeColls_.find(collName) != excludeColls_.end();
+    }
+
+    EventDisplay* EventDisplay::createEventDisplay(TEveManager* manager,
+                                                        std::string geometryFile,
+                                                        std::string cacheDir,
+                                                        std::vector<std::string> lcioFileList,
+                                                        std::set<std::string> excludeColls,
+                                                        double bY) {
+        if (instance_ != nullptr) {
+            throw std::runtime_error("The EventDisplay should only be created once!");
+        }
+        instance_ = new EventDisplay(manager, geometryFile, cacheDir, lcioFileList, excludeColls, bY);
+        return instance_;
+    }
+
+    EventDisplay* EventDisplay::getInstance() {
+        return instance_;
     }
 
 } /* namespace hps */

@@ -114,13 +114,13 @@ int main (int argc, char **argv) {
     browser->StartEmbedding(TRootBrowser::kLeft);
 
     // Create the main event display class
-    EventDisplay display(manager,
-                         geometryFile,
-                         cacheDir,
-                         lcioFileList,
-                         excludeColls,
-                         bY);
-    display.setVerbosity(verbose);
+    EventDisplay* ed = EventDisplay::createEventDisplay(manager,
+                                                        geometryFile,
+                                                        cacheDir,
+                                                        lcioFileList,
+                                                        excludeColls,
+                                                        bY);
+    ed->setVerbosity(verbose);
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();
@@ -128,6 +128,8 @@ int main (int argc, char **argv) {
     manager->FullRedraw3D();
 
     app->Run(kFALSE);
+
+    delete ed;
 
     return 0;
 }

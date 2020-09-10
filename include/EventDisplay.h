@@ -20,13 +20,6 @@ namespace hps {
 
         public:
 
-            EventDisplay(TEveManager* manager,
-                         std::string geometryFile,
-                         std::string cacheDir,
-                         std::vector<std::string> lcioFileList,
-                         std::set<std::string> excludeColls,
-                         double bY);
-
             virtual ~EventDisplay();
 
             /**
@@ -48,6 +41,24 @@ namespace hps {
 
             bool excludeCollection(const std::string& collName);
 
+            static EventDisplay* createEventDisplay(TEveManager* manager,
+                                                    std::string geometryFile,
+                                                    std::string cacheDir,
+                                                    std::vector<std::string> lcioFileList,
+                                                    std::set<std::string> excludeColls,
+                                                    double bY);
+
+            static EventDisplay* getInstance();
+
+        private:
+
+            EventDisplay(TEveManager* manager,
+                         std::string geometryFile,
+                         std::string cacheDir,
+                         std::vector<std::string> lcioFileList,
+                         std::set<std::string> excludeColls,
+                         double bY);
+
         private:
 
             TEveManager* eveManager_;
@@ -60,6 +71,8 @@ namespace hps {
             double bY_;
 
             TGNumberEntry* eventNumberEntry_;
+
+            static EventDisplay* instance_;
 
             ClassDef(EventDisplay, 1);
     };
