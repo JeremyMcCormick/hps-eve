@@ -15,13 +15,4 @@ namespace hps {
     void Verbosity::setVerbosity(int verbosity) {
         verbosity_ = verbosity;
     }
-
-    bool Verbosity::checkVerbosity(int level) {
-            return verbosity_ >= level;
-    }
-
-    bool Verbosity::checkVerbosity() {
-        return verbosity_ > 0;
-    }
-
 }

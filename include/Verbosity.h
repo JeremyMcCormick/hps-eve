@@ -15,9 +15,13 @@ namespace hps {
 
             virtual void setVerbosity(int verbosity);
 
-            bool checkVerbosity(int level);
+            inline bool checkVerbosity(int level) {
+                return verbosity_ >= level;
+            }
 
-            bool checkVerbosity();
+            inline bool checkVerbosity() {
+                return verbosity_;
+            }
 
         private:
 
