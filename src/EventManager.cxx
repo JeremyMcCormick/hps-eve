@@ -25,10 +25,6 @@ namespace hps {
         }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader(IO::LCReader::directAccess);
         reader_->open(app_->getLcioFiles());
-        //maxEvents_ = reader_->getNumberOfEvents();
-        //if (verbose_) {
-        //    std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
-        //}
         auto runHeader = reader_->readNextRunHeader();
         auto detName = runHeader->getDetectorName();
 
@@ -46,7 +42,7 @@ namespace hps {
             runNumber_ = event->getRunNumber();
             reader_->close();
             reader_->open(app_->getLcioFiles());
-            if (checkVerbosity(1)) {
+            if (checkVerbosity()) {
                 std::cout << "[ EventManager ] Done setting run number from first event!" << std::endl;
             }
         }
@@ -62,26 +58,19 @@ namespace hps {
 
     void EventManager::loadEvent(EVENT::LCEvent* event) {
         app_->getEveManager()->GetCurrentEvent()->DestroyElements();
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] Loading LCIO event: " << event->getEventNumber() << std::endl;
         }
         event_->build(app_->getEveManager(), event);
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] Done loading event!" << std::endl;
         }
     }
 
     void EventManager::GotoEvent(Int_t i) {
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] GotoEvent: " << i << std::endl;
         }
-        /*
-        if (i > maxEvents_ - 1) {
-            std::cerr << "[ EventManager ] Event num " << i
-                    << " is greater than max events " << maxEvents_
-                    << " (command ignored) " << std::endl;
-            return;
-        } else*/
         if (i < 0) {
             std::cerr << "[ EventManager ] Event number is not valid: " << i << std::endl;
             return;
@@ -91,7 +80,7 @@ namespace hps {
         }
         EVENT::LCEvent* event = nullptr;
         if (i == (eventNum_ + 1)) {
-            if (checkVerbosity(1)) {
+            if (checkVerbosity()) {
                 std::cout << "[ EventManager ] Reading next event" << std::endl;
             }
             try {
@@ -102,7 +91,7 @@ namespace hps {
                 std::cerr << "[ EventManager ] [ ERROR ] " << e.what() << std::endl;
             }
         } else {
-            if (checkVerbosity(1)) {
+            if (checkVerbosity()) {
                 std::cout << "[ EventManager ] Seeking event " << i
                         << " with run number " << runNumber_ << std::endl;
             }
@@ -127,7 +116,7 @@ namespace hps {
     }
 
     void EventManager::PrevEvent() {
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] PrevEvent" << std::endl;
         }
         if (eventNum_ > 0) {
@@ -138,7 +127,7 @@ namespace hps {
     }
 
     void EventManager::SetEventNumber() {
-        if (checkVerbosity(1)) {
+        if (checkVerbosity()) {
             std::cout << "[ EventManager ] Set event number: " << app_->getCurrentEventNumber() << std::endl;
         }
         if (app_->getCurrentEventNumber() > -1) {
