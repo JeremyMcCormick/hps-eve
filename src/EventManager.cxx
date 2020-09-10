@@ -23,35 +23,57 @@ namespace hps {
     }
 
     void EventManager::Open() {
+
+        // Open the LCIO reader.
         if (checkVerbosity()) {
             std::cout << "[ EventManager ] Opening reader... " << std::endl;
         }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader(IO::LCReader::directAccess);
         reader_->open(app_->getLcioFiles());
         auto runHeader = reader_->readNextRunHeader();
-        auto detName = runHeader->getDetectorName();
-
-        if (!app_->getDetectorGeometry()->isInitialized()) {
-            app_->getDetectorGeometry()->loadDetector(detName);
-        }
+        std::string detName;
 
         if (runHeader != nullptr) {
+            // Get run number and detector name from run header that was found.
+            // We are assuming run header was first record and reader does not need to be reset.
             runNumber_ = runHeader->getRunNumber();
+            detName = runHeader->getDetectorName();
         } else if (runHeader == nullptr) {
+            // Get run number and detector name from first event in file, as no run header was found.
+            // Then reset the reader by closing and reopening it.
             if (checkVerbosity(1)) {
                 std::cout << "[ EventManager ] Setting run number from first event ..." << std::endl;
             }
             auto event = reader_->readNextEvent();
             runNumber_ = event->getRunNumber();
+            detName = event->getDetectorName();
             reader_->close();
             reader_->open(app_->getLcioFiles());
             if (checkVerbosity()) {
                 std::cout << "[ EventManager ] Done setting run number from first event!" << std::endl;
             }
         }
+        if (runNumber_ < 0) {
+            // Run number was not found or it is invalid.
+            // This could break random IO with the reader but continue anyways.
+            std::cerr << "[ EventManager ] [ ERROR ] Run number was not set!" << std::endl;
+        } else {
+            if (checkVerbosity()) {
+                std::cout << "[ EventManager ] Run number set to: " << runNumber_ << std::endl;
+            }
+        }
         if (checkVerbosity()) {
-            std::cout << "[ EventManager ] Run number set to: " << runNumber_ << std::endl;
             std::cout << "[ EventManager ] Done opening reader!" << std::endl;
+        }
+
+        // Initialize the detector geometry if this has not been done already.
+        if (!app_->getDetectorGeometry()->isInitialized()) {
+            if (detName.size()) {
+                app_->getDetectorGeometry()->loadDetector(detName);
+            } else {
+                // No detector name was found to load geometry so crash the application.
+                throw std::runtime_error("Failed to get detector name from LCIO file!");
+            }
         }
     }
 
