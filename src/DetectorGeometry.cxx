@@ -64,6 +64,9 @@ void download(const char* url, const char* outfile)
 #endif
 
 #ifdef HAVE_LIBXML2
+
+#include <libxml/xmlreader.h>
+
 void extractGdmlFile(const char* lcddName, const char* gdmlName) {
 
     xmlDocPtr doc = xmlParseFile(lcddName);
@@ -130,7 +133,7 @@ namespace hps {
             TGeoNode* node = geo->GetCurrentNode();
             if (std::string(node->GetName()).find(patt) != std::string::npos) {
                 auto nodeName = node->GetName();
-                TGeoVolume* vol = gGeoManager->GetCurrentVolume();
+                TGeoVolume* vol = geo->GetCurrentVolume();
                 TEveGeoShape* shape = new TEveGeoShape(node->GetName(), vol->GetMaterial()->GetName());
                 shape->SetShape((TGeoShape*) vol->GetShape()->Clone());
                 shape->SetMainColor(vol->GetLineColor());
@@ -172,14 +175,14 @@ namespace hps {
         }
     }
 
-    TEveElement* DetectorGeometry::toEveElement(TGeoManager* mgr, TGeoNode* node) {
-        TGeoVolume* vol = gGeoManager->GetCurrentVolume();
+    TEveElement* DetectorGeometry::toEveElement(TGeoManager* geo, TGeoNode* node) {
+        TGeoVolume* vol = geo->GetCurrentVolume();
         TEveGeoShape* shape = new TEveGeoShape(node->GetName(), vol->GetMaterial()->GetName());
         shape->SetShape((TGeoShape*) vol->GetShape()->Clone());
         shape->SetMainColor(vol->GetLineColor());
         shape->SetFillColor(vol->GetFillColor());
         shape->SetMainTransparency(vol->GetTransparency());
-        shape->RefMainTrans().SetFrom(*mgr->GetCurrentMatrix());
+        shape->RefMainTrans().SetFrom(*geo->GetCurrentMatrix());
         return shape;
     }
 
@@ -242,5 +245,9 @@ namespace hps {
     void DetectorGeometry::buildDetector() {
         addTracker();
         addEcal();
+    }
+
+    bool DetectorGeometry::isInitialized() {
+        return geo_ != nullptr;
     }
 }

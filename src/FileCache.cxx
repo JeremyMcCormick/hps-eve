@@ -11,6 +11,9 @@ namespace hps {
         createCacheDir();
     }
 
+    FileCache::~FileCache() {
+    }
+
     bool FileCache::isCached(const std::string& fileName) {
         std::ifstream cacheFile;
         cacheFile.open(getCachedPath(fileName));
@@ -33,7 +36,7 @@ namespace hps {
         } else {
             if (errno == EEXIST) {
                 if (checkVerbosity()) {
-                    std::cout << "[ FileCache ] Cache dir already exists: " << cacheDir_ << std::endl;
+                    std::cout << "[ FileCache ] Cache dir already exists!" << std::endl;
                 }
             } else {
                 throw std::runtime_error("Failed to create cache dir.");

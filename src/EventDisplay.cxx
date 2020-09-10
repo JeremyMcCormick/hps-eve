@@ -37,15 +37,16 @@ namespace hps {
                                std::vector<std::string> lcioFileList,
                                std::set<std::string> excludeColls,
                                double bY) :
-            TGMainFrame (gClient->GetRoot (), 320, 320),
+            TGMainFrame (gClient->GetRoot(), 320, 320),
             lcioFileList_(lcioFileList),
-            manager_(manager),
+            excludeColls_(excludeColls),
+            eveManager_(manager),
             eventManager_(nullptr),
-            eventNumberEntry_(nullptr) {
+            eventNumberEntry_(nullptr),
+            bY_(bY) {
 
         SetWindowName("HPS Event Display");
 
-        //TGeoManager* gGeoManager = manager_->GetGeometry(this->geometryFile_.c_str());
         det_ = new DetectorGeometry(manager, cacheDir);
         if (geometryFile.size() > 0) {
             if (checkVerbosity(1)) {
@@ -61,14 +62,8 @@ namespace hps {
             std::cerr << "[ EventDisplay ] [ ERROR ] The fixed B-field value is zero!" << std::endl;
         }
 
-        // FIXME: Might be better to define this outside this class and pass as a pntr arg.
-        eventManager_ = new EventManager(manager,
-                                         det_,
-                                         this,
-                                         lcioFileList,
-                                         excludeColls,
-                                         bY);
-        manager_->AddEvent(eventManager_);
+        eventManager_ = new EventManager(this);
+        eveManager_->AddEvent(eventManager_);
         eventManager_->Open();
 
         ///////////////////////////
@@ -134,4 +129,29 @@ namespace hps {
         det_->setVerbosity(verbosity);
         eventManager_->setVerbosity(verbosity);
     }
+
+    EventManager* EventDisplay::getEventManager() {
+        return eventManager_;
+    }
+
+    TEveManager* EventDisplay::getEveManager() {
+        return eveManager_;
+    }
+
+    DetectorGeometry* EventDisplay::getDetectorGeometry() {
+        return det_;
+    }
+
+    double EventDisplay::getMagFieldY() {
+        return bY_;
+    }
+
+    const std::vector<std::string>& EventDisplay::getLcioFiles() {
+        return lcioFileList_;
+    }
+
+    bool EventDisplay::excludeCollection(const std::string& collName) {
+        return excludeColls_.find(collName) != excludeColls_.end();
+    }
+
 } /* namespace hps */

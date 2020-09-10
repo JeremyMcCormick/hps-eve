@@ -29,22 +29,35 @@ namespace hps {
 
             virtual ~EventDisplay();
 
-            void GotoEvent(Int_t i);
-
             /**
              * Get current event number from GUI component.
              */
             int getCurrentEventNumber();
 
+            EventManager* getEventManager();
+
+            TEveManager* getEveManager();
+
+            DetectorGeometry* getDetectorGeometry();
+
             void setVerbosity(int verbosity);
+
+            double getMagFieldY();
+
+            const std::vector<std::string>& getLcioFiles();
+
+            bool excludeCollection(const std::string& collName);
 
         private:
 
-            TEveManager* manager_;
+            TEveManager* eveManager_;
             EventManager* eventManager_;
             DetectorGeometry* det_;
 
             std::vector<std::string> lcioFileList_;
+            std::set<std::string> excludeColls_;
+
+            double bY_;
 
             TGNumberEntry* eventNumberEntry_;
 

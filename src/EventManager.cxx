@@ -8,20 +8,11 @@ ClassImp(hps::EventManager);
 
 namespace hps {
 
-    EventManager::EventManager(TEveManager* eve,
-                               DetectorGeometry* det,
-                               EventDisplay* app,
-                               std::vector<std::string> fileNames,
-                               std::set<std::string> excludeColls,
-                               double bY) :
+    EventManager::EventManager(EventDisplay* app) :
             TEveEventManager("HPS Event Manager", ""),
-            eve_(eve),
-            det_(det),
-            fileNames_(fileNames),
             reader_(nullptr),
-            event_(new EventObjects(det, excludeColls, bY)),
-            app_(app),
-            excludeColls_(excludeColls) {
+            event_(new EventObjects(app)),
+            app_(app) {
     }
 
     EventManager::~EventManager() {
@@ -33,7 +24,7 @@ namespace hps {
             std::cout << "[ EventManager ] Opening reader... " << std::endl;
         }
         reader_ = IOIMPL::LCFactory::getInstance()->createLCReader(IO::LCReader::directAccess);
-        reader_->open(this->fileNames_);
+        reader_->open(app_->getLcioFiles());
         //maxEvents_ = reader_->getNumberOfEvents();
         //if (verbose_) {
         //    std::cout << "[ EventManager ] Max events set to " << maxEvents_ << std::endl;
@@ -41,7 +32,9 @@ namespace hps {
         auto runHeader = reader_->readNextRunHeader();
         auto detName = runHeader->getDetectorName();
 
-        det_->loadDetector(detName);
+        if (!app_->getDetectorGeometry()->isInitialized()) {
+            app_->getDetectorGeometry()->loadDetector(detName);
+        }
 
         if (runHeader != nullptr) {
             runNumber_ = runHeader->getRunNumber();
@@ -52,7 +45,7 @@ namespace hps {
             auto event = reader_->readNextEvent();
             runNumber_ = event->getRunNumber();
             reader_->close();
-            reader_->open(this->fileNames_);
+            reader_->open(app_->getLcioFiles());
             if (checkVerbosity(1)) {
                 std::cout << "[ EventManager ] Done setting run number from first event!" << std::endl;
             }
@@ -68,11 +61,11 @@ namespace hps {
     }
 
     void EventManager::loadEvent(EVENT::LCEvent* event) {
-        eve_->GetCurrentEvent()->DestroyElements();
+        app_->getEveManager()->GetCurrentEvent()->DestroyElements();
         if (checkVerbosity(1)) {
             std::cout << "[ EventManager ] Loading LCIO event: " << event->getEventNumber() << std::endl;
         }
-        event_->build(eve_, event);
+        event_->build(app_->getEveManager(), event);
         if (checkVerbosity(1)) {
             std::cout << "[ EventManager ] Done loading event!" << std::endl;
         }
@@ -130,7 +123,7 @@ namespace hps {
         } else {
             std::cerr << "[ EventManager ] [ ERROR ] Failed to read next event!" << std::endl;
         }
-        eve_->FullRedraw3D(false);
+        app_->getEveManager()->FullRedraw3D(false);
     }
 
     void EventManager::PrevEvent() {

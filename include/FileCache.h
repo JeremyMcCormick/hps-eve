@@ -15,6 +15,8 @@ namespace hps {
 
             FileCache(std::string cacheDir);
 
+            virtual ~FileCache();
+
             bool isCached(const std::string& fileName);
 
             std::string getCachedPath(const std::string& fileName);

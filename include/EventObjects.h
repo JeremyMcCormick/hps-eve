@@ -20,20 +20,17 @@
 namespace hps {
 
     class DetectorGeometry;
+    class EventDisplay;
 
     class EventObjects : public Verbosity {
 
         public:
 
-            EventObjects(DetectorGeometry* det,
-                         std::set<std::string> excludeColls,
-                         double bY);
+            EventObjects(EventDisplay* app);
 
             virtual ~EventObjects();
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
-
-            bool excludeCollection(const std::string& collName);
 
         private:
 
@@ -50,15 +47,9 @@ namespace hps {
 
         private:
 
-            //TGeoManager* geo_;
-            DetectorGeometry* det_;
-
-            std::set<std::string> excludeColls_;
+            EventDisplay* app_;
 
             TStyle ecalStyle_;
-
-            // Fixed magnetic field Y component.
-            double bY_;
     };
 }
 

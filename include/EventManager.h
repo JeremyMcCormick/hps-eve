@@ -22,12 +22,7 @@ namespace hps {
 
         public:
 
-            EventManager(TEveManager* eve,
-                         DetectorGeometry* det,
-                         EventDisplay* app,
-                         std::vector<std::string> fileNames,
-                         std::set<std::string> excludeColls,
-                         double bY);
+            EventManager(EventDisplay* app);
 
             virtual ~EventManager();
 
@@ -56,19 +51,14 @@ namespace hps {
 
             void loadEvent(EVENT::LCEvent* event);
 
-            TEveManager* eve_;
-            //TGeoManager* geo_;
-            DetectorGeometry* det_;
-            EventDisplay* app_;
+        private:
 
             IO::LCReader* reader_;
-            std::vector<std::string> fileNames_;
-            std::set<std::string> excludeColls_;
 
-            int runNumber_{-1};
-
+            EventDisplay* app_;
             EventObjects* event_;
 
+            int runNumber_{-1};
             int eventNum_{-1};
             //int maxEvents_{999999};
 

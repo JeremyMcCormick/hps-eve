@@ -24,8 +24,6 @@ static void download(const char* url, const char* filename);
 
 #ifdef HAVE_LIBXML2
 
-#include <libxml/xmlreader.h>
-
 static void extractGdmlFile(const char* lcddName, const char* gdmlName);
 
 #endif
@@ -50,6 +48,8 @@ namespace hps {
             void loadDetector(const std::string& detName);
 
             void loadDetectorFile(const std::string& gdmlName);
+
+            bool isInitialized();
 
         private:
 

@@ -1,7 +1,7 @@
 #include "EventObjects.h"
 
 // HPS
-#include "DetectorGeometry.h"
+#include "EventDisplay.h"
 
 // LCIO
 #include "EVENT/LCIO.h"
@@ -23,8 +23,7 @@ using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(DetectorGeometry* det, std::set<std::string> excludeColls, double bY) :
-            det_(det), excludeColls_(excludeColls), bY_(bY) {
+    EventObjects::EventObjects(EventDisplay* app) : app_(app) {
         ecalStyle_.SetPalette(kThermometer);
     }
 
@@ -40,7 +39,7 @@ namespace hps {
                 it != collNames->end();
                 it++) {
             auto name = *it;
-            if (excludeCollection(name)) {
+            if (app_->excludeCollection(name)) {
                 if (checkVerbosity(1)) {
                     std::cout << "[ EventObjects ] Ignoring excluded collection: " << name << std::endl;
                 }
@@ -68,10 +67,6 @@ namespace hps {
     }
 
     EventObjects::~EventObjects() {
-    }
-
-    bool EventObjects::excludeCollection(const std::string& collName) {
-        return excludeColls_.find(collName) != excludeColls_.end();
     }
 
     TEveElementList* EventObjects::createSimTrackerHits(EVENT::LCCollection* coll) {
@@ -116,7 +111,7 @@ namespace hps {
         min = min * 100;
         max = max * 100;
 
-        TGeoManager* geo = det_->getGeoManager();
+        TGeoManager* geo = app_->getDetectorGeometry()->getGeoManager();
         TEveElementList* elements = new TEveElementList();
         for (int i=0; i<coll->getNumberOfElements(); i++) {
             EVENT::SimCalorimeterHit* hit = dynamic_cast<EVENT::SimCalorimeterHit*>(coll->getElementAt(i));
@@ -168,7 +163,7 @@ namespace hps {
 
         TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
 
-        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
+        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, app_->getMagFieldY(), 0.0));
         propsetCharged->SetDelta(0.01);
         propsetCharged->SetMaxR(150);
         propsetCharged->SetMaxZ(200);
@@ -179,7 +174,7 @@ namespace hps {
         //propsetCharged->RefPMAtt().SetMarkerSize(1);
 
         TEveTrackPropagator *propsetNeutral = new TEveTrackPropagator();
-        propsetNeutral->SetMagFieldObj(new TEveMagFieldConst(0.0, bY_, 0.0));
+        propsetNeutral->SetMagFieldObj(new TEveMagFieldConst(0.0, app_->getMagFieldY(), 0.0));
         propsetNeutral->SetDelta(0.01);
         propsetNeutral->SetMaxR(150);
         propsetNeutral->SetMaxZ(200);
