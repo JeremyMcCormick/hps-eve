@@ -1,6 +1,7 @@
 #include "EventDisplay.h"
 
 // HPS
+#include "DetectorGeometry.h"
 #include "EventManager.h"
 
 // C++ standard library

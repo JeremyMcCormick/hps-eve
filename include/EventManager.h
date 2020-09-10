@@ -17,6 +17,7 @@
 namespace hps {
 
     class EventDisplay;
+    class EventObjects;
 
     class EventManager : public TEveEventManager, public Verbosity {
 

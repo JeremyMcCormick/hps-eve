@@ -1,7 +1,9 @@
 #include "EventObjects.h"
 
 // HPS
+#include "DetectorGeometry.h"
 #include "EventDisplay.h"
+#include "EventObjects.h"
 
 // LCIO
 #include "EVENT/LCIO.h"

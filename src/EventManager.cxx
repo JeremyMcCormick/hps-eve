@@ -1,8 +1,11 @@
 #include "EventManager.h"
 
-#include "IOIMPL/LCFactory.h"
-
+// HPS
+#include "DetectorGeometry.h"
 #include "EventDisplay.h"
+
+// LCIO
+#include "IOIMPL/LCFactory.h"
 
 ClassImp(hps::EventManager);
 

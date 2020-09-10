@@ -4,17 +4,18 @@
 #include <vector>
 #include <string>
 
+// HPS
+#include "Verbosity.h"
+
 // ROOT
 #include "TGFrame.h"
 #include "TEveManager.h"
 #include "TGNumberEntry.h"
 
-// HPS
-#include "DetectorGeometry.h"
-
 namespace hps {
 
     class EventManager;
+    class DetectorGeometry;
 
     class EventDisplay : public TGMainFrame, public Verbosity {
 
