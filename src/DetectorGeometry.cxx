@@ -124,7 +124,8 @@ namespace hps {
     TEveElementList* DetectorGeometry::createGeoElements(TGeoManager* geo,
                                                          const char* name,
                                                          const char* path,
-                                                         const char* patt) {
+                                                         const char* patt,
+                                                         Char_t transparency) {
         auto elements = new TEveElementList(name);
         geo->cd(path);
         auto ndau = geo->GetCurrentNode()->GetNdaughters();
@@ -138,7 +139,8 @@ namespace hps {
                 shape->SetShape((TGeoShape*) vol->GetShape()->Clone());
                 shape->SetMainColor(vol->GetLineColor());
                 shape->SetFillColor(vol->GetFillColor());
-                shape->SetMainTransparency(vol->GetTransparency());
+                //shape->SetMainTransparency(vol->GetTransparency());
+                shape->SetMainTransparency(transparency);
                 shape->RefMainTrans().SetFrom(*geo->GetCurrentMatrix());
                 elements->AddElement(shape);
             }
@@ -154,7 +156,8 @@ namespace hps {
         auto tracker = createGeoElements(geo_,
                                          "SVT",
                                          "/world_volume_1/tracking_volume_0/base_volume_0",
-                                         "module_L");
+                                         "module_L",
+                                         50);
         eve_->AddGlobalElement(tracker);
         if (checkVerbosity()) {
             std::cout << "[ DetectorGeometry ] Done adding tracker!" << std::endl;
@@ -168,7 +171,9 @@ namespace hps {
         auto cal = createGeoElements(geo_,
                                      "ECAL",
                                      "/world_volume_1",
-                                     "crystal_volume");
+                                     "crystal_volume",
+                                     50);
+        cal->SetDrawOption("w");
         eve_->AddGlobalElement(cal);
         if (checkVerbosity()) {
             std::cout << "[ DetectorGeometry ] Done adding ECAL!" << std::endl;

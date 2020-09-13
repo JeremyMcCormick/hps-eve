@@ -62,7 +62,8 @@ namespace hps {
             static TEveElementList* createGeoElements(TGeoManager*,
                                                       const char* name,
                                                       const char* path,
-                                                      const char* patt);
+                                                      const char* patt,
+                                                      Char_t transparency = 100);
 
             /**
              * Add the SVT to Eve.

@@ -11,6 +11,7 @@
 #include "EVENT/SimTrackerHit.h"
 #include "EVENT/SimCalorimeterHit.h"
 #include "EVENT/MCParticle.h"
+#include "EVENT/Cluster.h"
 
 // ROOT
 #include "TEveElement.h"
@@ -20,13 +21,15 @@
 #include "TEveTrackPropagator.h"
 #include "TEveVSDStructs.h"
 #include "TEveTrack.h"
+#include "TEveRGBAPalette.h"
 
 using EVENT::LCIO;
 
 namespace hps {
 
-    EventObjects::EventObjects(EventDisplay* app) : app_(app) {
-        ecalStyle_.SetPalette(kThermometer);
+    EventObjects::EventObjects(EventDisplay* app) :
+            app_(app),
+            pdgdb_(TDatabasePDG::Instance()) {
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
@@ -56,6 +59,8 @@ namespace hps {
                 elements = createSimCalorimeterHits(coll);
             } else if (typeName == LCIO::MCPARTICLE) {
                 elements = createMCParticles(coll, simTrackerHits);
+            } else if (typeName == LCIO::CLUSTER) {
+                elements = createCalClusters(coll);
             }
             if (elements != nullptr) {
                 elements->SetElementName(name.c_str());
@@ -95,6 +100,10 @@ namespace hps {
     }
 
     TEveElementList* EventObjects::createSimCalorimeterHits(EVENT::LCCollection* coll) {
+
+        TStyle ecalStyle;
+        ecalStyle.SetPalette(kTemperatureMap);
+
         float min = 999;
         float max = -999;
         for (int i=0; i<coll->getNumberOfElements(); i++) {
@@ -110,7 +119,8 @@ namespace hps {
         if (checkVerbosity(2)) {
             std::cout << "[ EventObjects ] ECAL min, max hit energy: " << min << ", " << max << std::endl;
         }
-        min = min * 100;
+        //min = min * 100;
+        min = 0;
         max = max * 100;
 
         TGeoManager* geo = app_->getDetectorGeometry()->getGeoManager();
@@ -138,8 +148,9 @@ namespace hps {
                 continue;
             }
             TEveElement* element = DetectorGeometry::toEveElement(geo, node);
+
             auto energyScaled = energy * 100;
-            element->SetMainColor(TColor::GetColorPalette((energyScaled - min)/(max - min) * gStyle->GetNumberOfColors()));
+            element->SetMainColor(ecalStyle.GetColorPalette((energyScaled - min)/(max - min) * ecalStyle.GetNumberOfColors()));
             element->SetElementTitle(Form("Simulated Calorimeter Hit\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "Time = %f, Energy = %E, Contribs = %d",
@@ -189,28 +200,37 @@ namespace hps {
             TEveCompound *compound = new TEveCompound();
             compound->OpenCompound();
 
-            EVENT::MCParticle *p = dynamic_cast<EVENT::MCParticle*>(coll->getElementAt(i));
-            particleMap[p] = compound;
+            EVENT::MCParticle *mcp = dynamic_cast<EVENT::MCParticle*>(coll->getElementAt(i));
+            particleMap[mcp] = compound;
 
-            float charge = p->getCharge();
-            double energy = p->getEnergy();
-            //const double* endpoint = p->getEndpoint();
-            const double *momentum = p->getMomentum();
-            const double *vertex = p->getVertex();
+            float charge = mcp->getCharge();
+            double energy = mcp->getEnergy();
 
-            double px = momentum[0];
-            double py = momentum[1];
-            double pz = momentum[2];
+            double px = mcp->getMomentum()[0];
+            double py = mcp->getMomentum()[1];
+            double pz = mcp->getMomentum()[2];
+            double p = sqrt(px*px + py*py + pz*pz);
 
-            double x = vertex[0]/10.0;
-            double y = vertex[1]/10.0;
-            double z = vertex[2]/10.0;
+            double x = mcp->getVertex()[0]/10.0;
+            double y = mcp->getVertex()[1]/10.0;
+            double z = mcp->getVertex()[2]/10.0;
+
+            double endX = mcp->getEndpoint()[0]/10.0;
+            double endY = mcp->getEndpoint()[1]/10.0;
+            double endZ = mcp->getEndpoint()[2]/10.0;
+
+            TEveVector vertex(x, y, z);
+            TEveVector endpoint(endX, endY, endZ);
+
+            float length = vertex.Distance(endpoint);
+
+            TParticlePDG* pdg = pdgdb_->GetParticle(mcp->getPDG());
 
             if (checkVerbosity(4)) {
                 std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
-                        << "; vertex = (" << vertex[0] << ", " << vertex[1] << ", " << vertex[3]
-                        << "); " << "momentum = (" << momentum[0] << ", " << momentum[1] << ", "
-                        << momentum[3] << "); " << "gen_status = " << p->getGeneratorStatus()
+                        << "; vertex = (" << x << ", " << y << ", " << z
+                        << "); " << "momentum = (" << px << ", " << py << ", "
+                        << pz << "); " << "gen_status = " << mcp->getGeneratorStatus()
                         << std::endl;
             }
 
@@ -243,10 +263,19 @@ namespace hps {
             track->SetElementTitle(Form("MC Particle\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
-                    "Charge = %.3f, Energy = %.3f",
-                    vertex[0], vertex[1], vertex[2],
-                    momentum[0], momentum[1], momentum[3],
-                    charge, energy));
+                    "Charge = %.3f, Energy = %.3f, Length = %.3f\n"
+                    "P = %.3f",
+                    x, y, z,
+                    px, py, pz,
+                    charge, energy, length,
+                    p));
+
+            if (pdg) {
+                compound->SetElementName(pdg->GetName());
+            } else {
+                std::cerr << "[ EventObjects ] [ ERROR ] Unknown PDG code: " << mcp->getPDG() << std::endl;
+                compound->SetElementName("Unknown");
+            }
 
             //TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
             //TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
@@ -278,7 +307,14 @@ namespace hps {
             }
             */
 
-            track->MakeTrack(false);
+            if (length > this->lengthCut_) {
+                track->MakeTrack(false);
+            } else {
+                if (checkVerbosity(4)) {
+                    std::cout << "[ EventObjects] Skipping MakeTrack() for particle with path length: " << length << std::endl;
+                }
+            }
+
             compound->AddElement(track);
             compound->CloseCompound();
         }
@@ -321,6 +357,98 @@ namespace hps {
                 list.push_back(hit);
             }
         }
+    }
+
+    TEveElementList* EventObjects::createCalClusters(EVENT::LCCollection* coll) {
+
+        if (checkVerbosity(2)) {
+            std::cout << "[ EventObjects ] Creating clusters: " << coll->getNumberOfElements() << std::endl;
+        }
+
+        TGeoManager* geo = app_->getDetectorGeometry()->getGeoManager();
+
+        TEveElementList* elements = new TEveElementList();
+
+        TStyle clusStyle = createClusStyle();
+        int nColors = clusStyle.GetNumberOfColors();
+        int currColor = 0;
+        for (int i = 0; i < coll->getNumberOfElements(); i++) {
+
+            if (currColor > (nColors - 1)) {
+                currColor = 0;
+            }
+
+            TEveCompound* compound = new TEveCompound();
+            compound->SetElementName("Cluster");
+
+            EVENT::Cluster* clus = (EVENT::Cluster*)coll->getElementAt(i);
+            float x = clus->getPosition()[0]/10.0;
+            float y = clus->getPosition()[1]/10.0;
+            float z = clus->getPosition()[2]/10.0;
+
+            if (checkVerbosity(4)) {
+                std::cout << "[ EventObjects ] Adding cluster at: ("
+                        << x << "," << y << ", " << z << ")" << std::endl;
+            }
+
+            TEvePointSet* p = new TEvePointSet(1);
+            p->SetMarkerStyle(kStar);
+            p->SetMarkerSize(3.0);
+            p->SetPoint(0, x, y, z);
+            int color = clusStyle.GetColorPalette(currColor);
+            p->SetMarkerColor(color);
+            elements->AddElement(p);
+
+            auto hits = clus->getCalorimeterHits();
+            for (EVENT::CalorimeterHitVec::const_iterator it = hits.begin();
+                    it != hits.end();
+                    it++) {
+                auto hit = *it;
+                auto pos = hit->getPosition();
+                auto x = pos[0]/10.0;
+                auto y = pos[1]/10.0;
+                auto z = pos[2]/10.0;
+                geo->CdTop();
+                TGeoNode* node = geo->FindNode((double)x, (double)y, (double)z);
+                if (node != nullptr) {
+                    if (checkVerbosity(4)) {
+                        std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
+                    }
+                } else {
+                    std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit!" << std::endl;
+                    continue;
+                }
+                TEveElement* element = DetectorGeometry::toEveElement(geo, node);
+                element->SetMainColor(color);
+                p->AddElement(element);
+            }
+            ++currColor;
+        }
+
+        if (checkVerbosity(2)) {
+            std::cout << "[ Event Objects ] Done creating clusters!" << std::endl;
+        }
+
+        return elements;
+    }
+
+    TStyle EventObjects::createClusStyle() {
+        Int_t clusPalette[12];
+        clusPalette[0] = kRed;
+        clusPalette[1] = kGreen;
+        clusPalette[2] = kBlue;
+        clusPalette[3] = kYellow;
+        clusPalette[4] = kMagenta;
+        clusPalette[5] = kCyan;
+        clusPalette[6] = kOrange;
+        clusPalette[7] = kSpring;
+        clusPalette[8] = kTeal;
+        clusPalette[9] = kAzure;
+        clusPalette[10] = kViolet;
+        clusPalette[11] = kPink;
+        TStyle clusStyle;
+        clusStyle.SetPalette(12, clusPalette);
+        return clusStyle;
     }
 
 } /* namespace hps */

@@ -12,6 +12,7 @@
 #include "TGeoManager.h"
 #include "TStyle.h"
 #include "TEveTrack.h"
+#include "TDatabasePDG.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -41,15 +42,24 @@ namespace hps {
             TEveCompound* createMCParticles(EVENT::LCCollection* coll,
                                             EVENT::LCCollection* simTrackerHits);
 
+            TEveElementList* createCalClusters(EVENT::LCCollection* coll);
+
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,
                                            EVENT::MCParticle* p);
+
+            static TStyle createClusStyle();
 
         private:
 
             EventDisplay* app_;
 
-            TStyle ecalStyle_;
+            // Length cut for displaying particle trajectories in centimeters
+            double lengthCut_{1.0};
+
+            // TODO: momentum cut
+
+            TDatabasePDG* pdgdb_;
     };
 }
 
