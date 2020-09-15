@@ -44,6 +44,8 @@ namespace hps {
 
             TEveElementList* createCalClusters(EVENT::LCCollection* coll);
 
+            TEveElementList* createReconTracks(EVENT::LCCollection* coll);
+
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,
                                            EVENT::MCParticle* p);

@@ -1,5 +1,8 @@
 #include "EventObjects.h"
 
+// C++ standard library
+#include <cmath>
+
 // HPS
 #include "DetectorGeometry.h"
 #include "EventDisplay.h"
@@ -12,6 +15,7 @@
 #include "EVENT/SimCalorimeterHit.h"
 #include "EVENT/MCParticle.h"
 #include "EVENT/Cluster.h"
+#include "EVENT/Track.h"
 
 // ROOT
 #include "TEveElement.h"
@@ -61,6 +65,8 @@ namespace hps {
                 elements = createMCParticles(coll, simTrackerHits);
             } else if (typeName == LCIO::CLUSTER) {
                 elements = createCalClusters(coll);
+            } else if (typeName == LCIO::TRACK) {
+                elements = createReconTracks(coll);
             }
             if (elements != nullptr) {
                 elements->SetElementName(name.c_str());
@@ -427,6 +433,59 @@ namespace hps {
 
         if (checkVerbosity(2)) {
             std::cout << "[ Event Objects ] Done creating clusters!" << std::endl;
+        }
+
+        return elements;
+    }
+
+    TEveElementList* EventObjects::createReconTracks(EVENT::LCCollection* coll) {
+
+        static double fieldConversion = 2.99792458e-4;
+
+        auto elements = new TEveElementList();
+
+        float bY = this->app_->getMagFieldY();
+
+        TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
+        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, bY, 0.0));
+        propsetCharged->SetDelta(0.01);
+        propsetCharged->SetMaxR(150);
+        propsetCharged->SetMaxZ(200);
+        propsetCharged->SetMaxOrbs(2.0);
+
+        for (int i = 0; i < coll->getNumberOfElements(); i++) {
+
+            auto track = (EVENT::Track*) coll->getElementAt(i);
+            auto ts = track->getTrackState(EVENT::TrackState::AtIP);
+
+            float omega = ts->getOmega();
+            double pt = bY * fieldConversion / abs(omega);
+//            double pt = abs((1./omega) * bY * fieldConversion);
+
+            double px = pt * cos(ts->getPhi());
+            double py = pt * sin(ts->getPhi());
+            double pz = pt * ts->getTanLambda();
+
+            std::cout << "[ EventObjects ] : Making track with (px, py, pz) = ("
+                    << px << ", " << py << ", " << pz << ")"
+                    << std::endl;
+
+            auto refPoint = track->getReferencePoint();
+
+            double charge = omega > 0. ? charge = -1 : charge = 1;
+
+            TEveRecTrack *recTrack = new TEveRecTrack();
+            recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
+            recTrack->fP.Set(px, py, pz);
+            recTrack->fSign = charge;
+
+            TEveTrack *eveTrack = new TEveTrack(recTrack, nullptr);
+            eveTrack->SetPropagator(propsetCharged);
+            eveTrack->SetMainColor(kGreen);
+
+            eveTrack->MakeTrack();
+
+            elements->AddElement(eveTrack);
         }
 
         return elements;
