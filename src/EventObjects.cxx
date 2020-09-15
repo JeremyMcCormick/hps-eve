@@ -421,7 +421,9 @@ namespace hps {
                         std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
                     }
                 } else {
-                    std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit!" << std::endl;
+                    std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit at: ("
+                            << x << ", " << y << ", " << z << ")"
+                            << std::endl;
                     continue;
                 }
                 TEveElement* element = DetectorGeometry::toEveElement(geo, node);
@@ -453,6 +455,10 @@ namespace hps {
         propsetCharged->SetMaxZ(200);
         propsetCharged->SetMaxOrbs(2.0);
 
+        // TODO: rotate momentum 90 deg clockwise around Y to display correctly...
+        // https://root.cern/root/html606/classTRotation.html
+        // https://root.cern.ch/root/html534/guides/users-guide/PhysicsVectors.html
+
         for (int i = 0; i < coll->getNumberOfElements(); i++) {
 
             auto track = (EVENT::Track*) coll->getElementAt(i);
@@ -460,19 +466,22 @@ namespace hps {
 
             float omega = ts->getOmega();
             double pt = bY * fieldConversion / abs(omega);
-//            double pt = abs((1./omega) * bY * fieldConversion);
 
-            double px = pt * cos(ts->getPhi());
+            //double px = pt * cos(ts->getPhi());
+            //double py = pt * sin(ts->getPhi());
+            //double pz = pt * ts->getTanLambda();
+
+            // Momentum calculation from Norman
+            double pz = pt * cos(ts->getPhi());
             double py = pt * sin(ts->getPhi());
-            double pz = pt * ts->getTanLambda();
-
-            std::cout << "[ EventObjects ] : Making track with (px, py, pz) = ("
-                    << px << ", " << py << ", " << pz << ")"
-                    << std::endl;
+            double px = pt * ts->getTanLambda();
 
             auto refPoint = track->getReferencePoint();
-
             double charge = omega > 0. ? charge = -1 : charge = 1;
+
+            std::cout << "[ EventObjects ] Making track with (px, py, pz) = ("
+                    << px << ", " << py << ", " << pz << ")"
+                    << std::endl;
 
             TEveRecTrack *recTrack = new TEveRecTrack();
             recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
