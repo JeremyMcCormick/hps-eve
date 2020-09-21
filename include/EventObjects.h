@@ -13,6 +13,7 @@
 #include "TStyle.h"
 #include "TEveTrack.h"
 #include "TDatabasePDG.h"
+#include "TEveText.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -45,6 +46,8 @@ namespace hps {
             TEveElementList* createCalClusters(EVENT::LCCollection* coll);
 
             TEveElementList* createReconTracks(EVENT::LCCollection* coll);
+
+            TEveText* createEventText(EVENT::LCEvent* event);
 
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,

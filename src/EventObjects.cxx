@@ -2,6 +2,7 @@
 
 // C++ standard library
 #include <cmath>
+#include <sstream>
 
 // HPS
 #include "DetectorGeometry.h"
@@ -26,6 +27,8 @@
 #include "TEveVSDStructs.h"
 #include "TEveTrack.h"
 #include "TEveRGBAPalette.h"
+#include "TGeoBBox.h"
+#include "TEveTrans.h"
 
 using EVENT::LCIO;
 
@@ -77,6 +80,9 @@ namespace hps {
                 manager->AddElement(elements);
             }
         }
+
+        //TEveText* text = createEventText(event);
+        //manager->AddElement(text);
     }
 
     EventObjects::~EventObjects() {
@@ -467,14 +473,15 @@ namespace hps {
             float omega = ts->getOmega();
             double pt = bY * fieldConversion / abs(omega);
 
-            //double px = pt * cos(ts->getPhi());
-            //double py = pt * sin(ts->getPhi());
-            //double pz = pt * ts->getTanLambda();
-
-            // Momentum calculation from Norman
-            double pz = pt * cos(ts->getPhi());
+            double px = pt * cos(ts->getPhi());
             double py = pt * sin(ts->getPhi());
-            double px = pt * ts->getTanLambda();
+            double pz = pt * ts->getTanLambda();
+
+            TVector3 p(px, py, pz);
+            p.RotateY(-(TMath::Pi() / 2));
+            p.RotateZ(-(TMath::Pi() / 2));
+
+            track->getChi2();
 
             auto refPoint = track->getReferencePoint();
             double charge = omega > 0. ? charge = -1 : charge = 1;
@@ -485,12 +492,25 @@ namespace hps {
 
             TEveRecTrack *recTrack = new TEveRecTrack();
             recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
-            recTrack->fP.Set(px, py, pz);
+            //recTrack->fP.Set(px, py, pz);
+            recTrack->fP.Set(p);
             recTrack->fSign = charge;
 
             TEveTrack *eveTrack = new TEveTrack(recTrack, nullptr);
             eveTrack->SetPropagator(propsetCharged);
             eveTrack->SetMainColor(kGreen);
+
+            /*
+            eveTrack->SetElementTitle(Form("Recon Track\n"
+                    "(x, y, z) = (%.3f, %.3f, %.3f)\n"
+                    "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
+                    "Charge = %.3f, Energy = %.3f, Length = %.3f\n"
+                    "P = %.3f",
+                    x, y, z,
+                    px, py, pz,
+                    charge, energy, length,
+                    p));
+            */
 
             eveTrack->MakeTrack();
 
@@ -517,6 +537,17 @@ namespace hps {
         TStyle clusStyle;
         clusStyle.SetPalette(12, clusPalette);
         return clusStyle;
+    }
+
+    TEveText* EventObjects::createEventText(EVENT::LCEvent* event) {
+        auto bbox = (TGeoBBox*) app_->getDetectorGeometry()->getGeoManager()->GetTopVolume()->GetShape();
+        double y = bbox->GetDY() / 2;
+        std::stringstream ss;
+        ss << event->getDetectorName() << " : " << event->getRunNumber() << " : " << event->getEventNumber();
+        TEveText* test = new TEveText(ss.str().c_str());
+        test->SetFontSize(16);
+        test->PtrMainTrans()->SetPos(0, y, 0);
+        return test;
     }
 
 } /* namespace hps */
