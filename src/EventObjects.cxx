@@ -98,6 +98,7 @@ namespace hps {
             auto edep = hit->getEDep();
             auto hitTime = hit->getTime();
             TEvePointSet* p = new TEvePointSet(1);
+            p->SetElementName("SimTrackerHit");
             p->SetMarkerStyle(kStar);
             p->SetMarkerSize(0.2);
             p->SetPoint(0, x/10.0, y/10.0, z/10.0);
@@ -160,6 +161,7 @@ namespace hps {
                 continue;
             }
             TEveElement* element = DetectorGeometry::toEveElement(geo, node);
+            element->SetElementName("SimCalorimeterHit");
 
             auto energyScaled = energy * 100;
             element->SetMainColor(ecalStyle.GetColorPalette((energyScaled - min)/(max - min) * ecalStyle.GetNumberOfColors()));
@@ -252,6 +254,12 @@ namespace hps {
             recTrack->fSign = charge;
 
             TEveTrack *track = new TEveTrack(recTrack, nullptr);
+            if (pdg) {
+                track->SetElementName(pdg->GetName());
+            } else {
+                std::cerr << "[ EventObjects ] [ ERROR ] Unknown PDG code: " << mcp->getPDG() << std::endl;
+                track->SetElementName("Unknown");
+            }
             if (charge != 0.0) {
                 if (checkVerbosity(4)) {
                     std::cout << "[ EventObjects ] Adding charged track" << std::endl;
@@ -404,6 +412,7 @@ namespace hps {
             }
 
             TEvePointSet* p = new TEvePointSet(1);
+            p->SetElementName("Cluster");
             p->SetMarkerStyle(kStar);
             p->SetMarkerSize(3.0);
             p->SetPoint(0, x, y, z);
@@ -433,6 +442,7 @@ namespace hps {
                     continue;
                 }
                 TEveElement* element = DetectorGeometry::toEveElement(geo, node);
+                element->SetElementName("CalorimeterHit");
                 element->SetMainColor(color);
                 p->AddElement(element);
             }
@@ -495,6 +505,7 @@ namespace hps {
             recTrack->fSign = charge;
 
             TEveTrack *eveTrack = new TEveTrack(recTrack, nullptr);
+            eveTrack->SetElementName("Track");
             eveTrack->SetPropagator(propsetCharged);
             eveTrack->SetMainColor(kGreen);
 
