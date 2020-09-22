@@ -461,13 +461,10 @@ namespace hps {
         propsetCharged->SetMaxZ(200);
         propsetCharged->SetMaxOrbs(2.0);
 
-        // TODO: rotate momentum 90 deg clockwise around Y to display correctly...
-        // https://root.cern/root/html606/classTRotation.html
-        // https://root.cern.ch/root/html534/guides/users-guide/PhysicsVectors.html
-
         for (int i = 0; i < coll->getNumberOfElements(); i++) {
 
             auto track = (EVENT::Track*) coll->getElementAt(i);
+
             auto ts = track->getTrackState(EVENT::TrackState::AtIP);
 
             float omega = ts->getOmega();
@@ -486,13 +483,14 @@ namespace hps {
             auto refPoint = track->getReferencePoint();
             double charge = omega > 0. ? charge = -1 : charge = 1;
 
-            std::cout << "[ EventObjects ] Making track with (px, py, pz) = ("
-                    << px << ", " << py << ", " << pz << ")"
-                    << std::endl;
+            if (this->checkVerbosity(4)) {
+                std::cout << "[ EventObjects ] Making track with (px, py, pz) = ("
+                        << px << ", " << py << ", " << pz << ")"
+                        << std::endl;
+            }
 
             TEveRecTrack *recTrack = new TEveRecTrack();
             recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
-            //recTrack->fP.Set(px, py, pz);
             recTrack->fP.Set(p);
             recTrack->fSign = charge;
 
@@ -500,17 +498,12 @@ namespace hps {
             eveTrack->SetPropagator(propsetCharged);
             eveTrack->SetMainColor(kGreen);
 
-            /*
             eveTrack->SetElementTitle(Form("Recon Track\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
-                    "Charge = %.3f, Energy = %.3f, Length = %.3f\n"
-                    "P = %.3f",
-                    x, y, z,
-                    px, py, pz,
-                    charge, energy, length,
-                    p));
-            */
+                    "Charge = %.3f, P = %.3f, Chi2 = %.3f",
+                    refPoint[0], refPoint[1], refPoint[2],
+                    p.X(), p.Y(), p.Z(), charge, p.Mag(), track->getChi2()));
 
             eveTrack->MakeTrack();
 
