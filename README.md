@@ -94,4 +94,4 @@ Here is an example showing typical command line usage:
 ./install/bin/hps-eve -v 2 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits events.slcio
 ```
 
-This runs with verbose level 2, using a fixed B-field value of 1.034, excludes several collections and will load LCIO data from the file `events.slcio`.
+This will run with verbose level 2 using a fixed B-field value of 1.034, excluding several collections, with data loaded from the file `events.slcio`.
