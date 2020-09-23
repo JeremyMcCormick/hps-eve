@@ -1,4 +1,4 @@
-# hps-event-display
+# hps-eve
 
 ## Building
 
