@@ -7,11 +7,12 @@ Dependencies you will need to have installed:
 - [ROOT](https://root.cern/install/) - tested only with 6.18.04
 - [LCIO](https://github.com/jeffersonlab/hps-lcio) - use the HPS LCIO fork, not the one from ILCSoft
 
-For ROOT, see the [build from source instructions](https://root.cern/install/build_from_source/). You need to make sure that OpenGL is enabled and that the Eve library has been created by the build (typically libEve.so in your ROOT library installation directory).
+For ROOT, see the [build from source instructions](https://root.cern/install/build_from_source/). You need to make sure that OpenGL is enabled and that the Eve library has been created by the build (typically `libEve.so` in your ROOT library installation directory).
 
 If you do not have LCIO installed, it can be built in the following way:
 
 ```
+cd /scratch # your work dir 
 git clone https://github.com/jeffersonlab/hps-lcio.git
 cd hps-lcio
 mkdir build
@@ -23,6 +24,7 @@ make install
 Then to build hps-eve:
 
 ```
+cd /scratch # your work dir
 git clone https://github.com/jeremymmccormick/hps-eve.git
 cd hps-eve
 mkdir build
