@@ -7,47 +7,56 @@ Dependencies you will need to have installed:
 - [ROOT](https://root.cern/install/) - tested only with 6.18.04
 - [LCIO](https://github.com/jeffersonlab/hps-lcio) - use the HPS LCIO fork, not the one from ILCSoft
 
-For ROOT, see the [build from source instructions](https://root.cern/install/build_from_source/). You need to make sure that OpenGL is enabled and that the Eve library has been created by the build (typically `libEve.so` in your ROOT library installation directory).
+For ROOT, see the [build from source instructions](https://root.cern/install/build_from_source/). You need to make sure that OpenGL is enabled and that the Eve library has been created by the build (typically `libEve.so` in your ROOT library installation directory). If it is missing, then make sure the appropriate graphics packages are all installed on your machine and rebuild.
 
-If you do not have LCIO installed, it can be built in the following way:
+In the following instructions, it is assumed that software packages will be installed in the `/scratch` directory, but this could be replaced by any work directory on your machine where you have write access.
+
+Once ROOT has been built, you should source the setup script:
 
 ```
-cd /scratch # your work dir 
+. root/bin/thisroot.sh
+```
+
+The exact location of this script depends on where you installed ROOT.
+
+If you do not have LCIO installed already, it can be built in the following way:
+
+```
+cd /scratch 
 git clone https://github.com/jeffersonlab/hps-lcio.git
 cd hps-lcio
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_INSTALL_PREFIX=/scratch/hps-lcio/install ..
 make install
 ```
 
 Then to build hps-eve:
 
 ```
-cd /scratch # your work dir
+cd /scratch
 git clone https://github.com/jeremymmccormick/hps-eve.git
 cd hps-eve
 mkdir build
 cd build
-. /my/root/install/bin/thisroot.sh # source your ROOT setup script
-cmake -DLCIO_DIR=/path/to/lcio/install -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+cmake -DLCIO_DIR=/scratch/hps-eve/install ..
 make install
 ```
 
-You should now have a working hps-eve installation in the install directory.
+You should now have a working hps-eve installation in the `install` directory.
 
 ## Running
 
-Assuming you are starting a fresh session, you will always need to have ROOT setup:
+You will always need to setup ROOT before running the app:
 
 ```
-. /my/root/install/bin/thisroot.sh # source your ROOT setup script
+. root/install/bin/thisroot.sh # replace with path to your ROOT setup script
 ```
 
-Then source the environment setup script from your install dir:
+Then source the hps-eve environment setup script from your install dir:
 
 ```
-. install/bin/hps-eve-env.sh
+. /scratch/hps-eve/install/bin/hps-eve-env.sh
 ```
 
 Now the command `hps-eve` should be found on the command line.
