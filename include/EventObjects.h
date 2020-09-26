@@ -34,6 +34,8 @@ namespace hps {
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
+            void setPCut(double pcut, bool redraw = true);
+
         private:
 
             TEveElementList* createSimTrackerHits(EVENT::LCCollection* coll);
@@ -55,14 +57,22 @@ namespace hps {
 
             static TStyle createClusStyle();
 
+            const std::vector<TEveElementList*> getElementsByType(const std::string& typeName);
+
+            void setPCut(TEveElementList* element);
+
         private:
 
             EventDisplay* app_;
 
-            // Length cut for displaying particle trajectories in centimeters
+            // Length cut for displaying particle trajectories in centimeters (hard-coded for now)
             double lengthCut_{1.0};
 
-            // TODO: momentum cut
+            // P cut for MCParticles which can be set in GUI
+            double pcut_{0.0};
+
+            // Map of LCIO types to Eve element lists.
+            std::map<std::string, std::vector<TEveElementList*>> typeMap_;
 
             TDatabasePDG* pdgdb_;
     };

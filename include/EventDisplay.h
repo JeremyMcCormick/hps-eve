@@ -51,6 +51,8 @@ namespace hps {
 
             static EventDisplay* getInstance();
 
+            double getPCut();
+
         private:
 
             EventDisplay(TEveManager* manager,
@@ -72,6 +74,8 @@ namespace hps {
             double bY_;
 
             TGNumberEntry* eventNumberEntry_;
+
+            TGNumberEntry* PTCutEntry_;
 
             static EventDisplay* instance_;
 

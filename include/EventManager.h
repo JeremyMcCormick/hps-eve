@@ -40,6 +40,11 @@ namespace hps {
 
             void setVerbosity(int verbosity);
 
+            /**
+             * Modify the MCParticle P cut according to GUI setting.
+             */
+            void modifyPCut();
+
             /*
             void Close();
             void AfterNewEventLoaded();

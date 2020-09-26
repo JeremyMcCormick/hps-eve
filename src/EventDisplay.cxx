@@ -3,8 +3,6 @@
 // HPS
 #include "DetectorGeometry.h"
 #include "EventManager.h"
-
-// C++ standard library
 #include <unistd.h>
 #include <iostream>
 #include <stdexcept>
@@ -82,42 +80,72 @@ namespace hps {
             throw std::runtime_error("HPS_EVE_DIR is not set!");
         }
         TString icondir(Form("%s/share/icons/", homedir));
-        TGPictureButton* b = 0;
 
-        // Next event
-        b = new TGPictureButton (hf, gClient->GetPicture (icondir + "GoBack.gif"));
-        hf->AddFrame(b);
-        b->Connect ("Clicked()", "hps::EventManager", eventManager_, "PrevEvent()");
+        // Event Control
+        {
+            TGPictureButton* b = 0;
 
-        // Previous event
-        b = new TGPictureButton (hf, gClient->GetPicture (icondir + "GoForward.gif"));
-        hf->AddFrame(b);
-        b->Connect("Clicked()", "hps::EventManager", eventManager_, "NextEvent()");
+            // Next event
+            b = new TGPictureButton (hf, gClient->GetPicture (icondir + "GoBack.gif"));
+            hf->AddFrame(b);
+            b->Connect ("Clicked()", "hps::EventManager", eventManager_, "PrevEvent()");
 
-        // Go to event
-        TGHorizontalFrame* eventNrFrame = new TGHorizontalFrame(frmEvent);
-        TGLabel* eventNrLabel = new TGLabel(eventNrFrame, "  Go to \n  Event");
-        eventNumberEntry_ = new TGNumberEntry(eventNrFrame, 0, 5, -1,
-                                              TGNumberFormat::kNESInteger,
-                                              TGNumberFormat::kNEAAnyNumber,
-                                              TGNumberFormat::kNELLimitMinMax,
-                                              0, std::numeric_limits<int>::max());
-        eventNrFrame->AddFrame(eventNrLabel, new TGLayoutHints(kLHintsNormal, 5, 5, 0, 0));
-        eventNrFrame->AddFrame(eventNumberEntry_);
-        eventNumberEntry_->GetNumberEntry()->Connect(
-                "ReturnPressed()", "hps::EventManager", eventManager_, "SetEventNumber()");
-        frmEvent->AddFrame(eventNrFrame);
+            // Previous event
+            b = new TGPictureButton (hf, gClient->GetPicture (icondir + "GoForward.gif"));
+            hf->AddFrame(b);
+            b->Connect("Clicked()", "hps::EventManager", eventManager_, "NextEvent()");
 
-        // Add event frame
-        AddFrame(frmEvent, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+            // Go to event
+            TGHorizontalFrame* eventNrFrame = new TGHorizontalFrame(frmEvent);
+            TGLabel* eventNrLabel = new TGLabel(eventNrFrame, "  Go to \n  Event");
+            eventNumberEntry_ = new TGNumberEntry(eventNrFrame, 0, 5, -1,
+                                                  TGNumberFormat::kNESInteger,
+                                                  TGNumberFormat::kNEAAnyNumber,
+                                                  TGNumberFormat::kNELLimitMinMax,
+                                                  0, std::numeric_limits<int>::max());
+            eventNrFrame->AddFrame(eventNrLabel, new TGLayoutHints(kLHintsNormal, 5, 5, 0, 0));
+            eventNrFrame->AddFrame(eventNumberEntry_);
+            eventNumberEntry_->GetNumberEntry()->Connect(
+                    "ReturnPressed()", "hps::EventManager", eventManager_, "SetEventNumber()");
+            frmEvent->AddFrame(eventNrFrame);
 
-        ///////////////////
-        // End build GUI
-        ///////////////////
+            // Add event frame
+            AddFrame(frmEvent, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+        }
+
+        // Display Cuts
+        // from Druid/src/GUI.cc
+        {
+            TGGroupFrame *frmCuts = new TGGroupFrame(this, "Cuts", kHorizontalFrame);
+            TGVerticalFrame* vf = new TGVerticalFrame(frmCuts);
+            frmCuts->AddFrame(vf);
+
+            TGGroupFrame *frmPTCut = new TGGroupFrame(vf, "MCParticle P Cut: ", kHorizontalFrame);
+            vf->AddFrame(frmPTCut, new TGLayoutHints (kLHintsLeft, 2, 2, 0, 0));
+            TGHorizontalFrame *cellSize = new TGHorizontalFrame(frmPTCut);
+            TGLabel *cellLabel = new TGLabel(frmPTCut, "GeV");
+            cellSize->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft));
+            PTCutEntry_ = new TGNumberEntry (frmPTCut, 0.0, 5, -1,
+                                             TGNumberFormat::kNESRealThree,
+                                             TGNumberFormat::kNEAPositive,
+                                             TGNumberFormat::kNELNoLimits,
+                                             0.001, 10.0);
+            frmPTCut->AddFrame(PTCutEntry_);
+            frmPTCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
+
+            // TODO: connect this to EventObjects
+            PTCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyPCut()");
+
+            AddFrame(frmCuts, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsTop));
+        }
 
         MapSubwindows();
         Resize(GetDefaultSize());
         MapWindow();
+
+        ///////////////////
+        // End build GUI
+        ///////////////////
     }
 
     EventDisplay::~EventDisplay() {
@@ -172,6 +200,10 @@ namespace hps {
 
     EventDisplay* EventDisplay::getInstance() {
         return instance_;
+    }
+
+    double EventDisplay::getPCut() {
+        return  PTCutEntry_->GetNumber();
     }
 
 } /* namespace hps */

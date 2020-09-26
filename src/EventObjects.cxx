@@ -8,6 +8,7 @@
 #include "DetectorGeometry.h"
 #include "EventDisplay.h"
 #include "EventObjects.h"
+#include "LCObjectUserData.h"
 
 // LCIO
 #include "EVENT/LCIO.h"
@@ -44,6 +45,9 @@ namespace hps {
             std::cout << "[ EventObjects ] Set new LCIO event: " << event->getEventNumber() << std::endl;
         }
 
+        // Clear the map of types to element lists.
+        typeMap_.clear();
+
         EVENT::LCCollection* simTrackerHits = event->getCollection("TrackerHits");
 
         const std::vector<std::string>* collNames = event->getCollectionNames();
@@ -58,7 +62,7 @@ namespace hps {
                 continue;
             }
             EVENT::LCCollection* coll = event->getCollection(name);
-            TEveElement* elements = nullptr;
+            TEveElementList* elements = nullptr;
             auto typeName = coll->getTypeName();
             if (typeName == LCIO::SIMTRACKERHIT) {
                 elements = createSimTrackerHits(coll);
@@ -78,8 +82,20 @@ namespace hps {
                 }
                 elements->SetPickableRecursively(true);
                 manager->AddElement(elements);
-            }
+
+                if (checkVerbosity(2)) {
+                    std::cout << "[ EventObjects ] Mapping element list to type: " << typeName << std::endl;
+                }
+                typeMap_[typeName].push_back(elements);
+            } /*else {
+                if (checkVerbosity()) {
+                    std::cerr << "[ EventObjects ] : Unhandled collection: " << name << ":" << typeName << std::endl;
+                }
+            }*/
         }
+
+        // Filter MCParticle objects from P cut but do not redraw (done automatically outside this method)
+        setPCut(pcut_, false);
 
         //TEveText* text = createEventText(event);
         //manager->AddElement(text);
@@ -223,7 +239,6 @@ namespace hps {
             double px = mcp->getMomentum()[0];
             double py = mcp->getMomentum()[1];
             double pz = mcp->getMomentum()[2];
-            double p = sqrt(px*px + py*py + pz*pz);
 
             double x = mcp->getVertex()[0]/10.0;
             double y = mcp->getVertex()[1]/10.0;
@@ -280,6 +295,8 @@ namespace hps {
                 //track->SetMarkerSize(1);
             }
 
+            TVector3 p(px, py, pz);
+
             track->SetElementTitle(Form("MC Particle\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
@@ -288,7 +305,7 @@ namespace hps {
                     x, y, z,
                     px, py, pz,
                     charge, energy, length,
-                    p));
+                    p.Mag()));
 
             if (pdg) {
                 compound->SetElementName(pdg->GetName());
@@ -334,6 +351,8 @@ namespace hps {
                     std::cout << "[ EventObjects] Skipping MakeTrack() for particle with path length: " << length << std::endl;
                 }
             }
+
+            track->SetUserData(new MCParticleUserData(mcp, p.Mag()));
 
             compound->AddElement(track);
             compound->CloseCompound();
@@ -514,7 +533,8 @@ namespace hps {
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
                     "Charge = %.3f, P = %.3f, Chi2 = %.3f",
                     refPoint[0], refPoint[1], refPoint[2],
-                    p.X(), p.Y(), p.Z(), charge, p.Mag(), track->getChi2()));
+                    p.X(), p.Y(), p.Z(), charge, p.Mag(),
+                    track->getChi2()));
 
             eveTrack->MakeTrack();
 
@@ -552,6 +572,57 @@ namespace hps {
         test->SetFontSize(16);
         test->PtrMainTrans()->SetPos(0, y, 0);
         return test;
+    }
+
+    void EventObjects::setPCut(double pcut, bool redraw) {
+
+        pcut_ = pcut;
+
+        if (checkVerbosity()) {
+            std::cout << "[ EventObjects ]: Setting new MCParticle P cut: " << pcut << std::endl;
+        }
+        const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::MCPARTICLE));
+        if (particleLists.size() > 0) {
+            for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
+                    it != particleLists.end(); it++) {
+                TEveElementList* particleList = *(it);
+                setPCut(particleList);
+            }
+            if (redraw) {
+                app_->getEveManager()->FullRedraw3D(false);
+            }
+        }
+    }
+
+    void EventObjects::setPCut(TEveElementList* list) {
+        if (checkVerbosity(4)) {
+            std::cout << "[ EventObjects ] Setting P cut on particle list with size: " << list->GetNItems() << std::endl;
+        }
+        for (TEveElement::List_i it = list->BeginChildren();
+                it != list->EndChildren(); it++) {
+            TEveElement* elem = *(it);
+            if (elem->GetUserData() != nullptr) {
+                MCParticleUserData* particleData = (MCParticleUserData*)(elem->GetUserData());
+                if (particleData != nullptr) {
+                    double p = particleData->p();
+                    if (p < pcut_) {
+                        if (checkVerbosity(4)) {
+                            std::cout << "[ EventObjects ] Cutting particle with P: " << p << std::endl;
+                        }
+                        elem->SetRnrSelf(false);
+                    }
+                }
+            } else if (dynamic_cast<TEveCompound*>(elem) != nullptr) {
+                if (checkVerbosity(4)) {
+                    std::cout << "[ EventObjects ] Recurse P cut to children..." << std::endl;
+                }
+                setPCut((TEveCompound*)elem);
+            }
+        }
+    }
+
+    const std::vector<TEveElementList*> EventObjects::getElementsByType(const std::string& typeName) {
+        return typeMap_[typeName];
     }
 
 } /* namespace hps */

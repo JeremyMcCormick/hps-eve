@@ -169,6 +169,11 @@ namespace hps {
         event_->setVerbosity(verbosity);
     }
 
+    void EventManager::modifyPCut() {
+        // Forward P cut to EventObjects.
+        event_->setPCut(app_->getPCut(), true);
+    }
+
     /*
     void EventManager::Close() {
         std::cout << "[ EventManager ] : Close" << std::endl;
