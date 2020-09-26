@@ -171,7 +171,10 @@ namespace hps {
 
     void EventManager::modifyPCut() {
         // Forward P cut to EventObjects.
-        event_->setPCut(app_->getPCut(), true);
+        event_->setPCut(app_->getPCut());
+
+        // Redraw the scene.
+        app_->getEveManager()->FullRedraw3D(false);
     }
 
     /*

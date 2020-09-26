@@ -34,7 +34,7 @@ namespace hps {
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
-            void setPCut(double pcut, bool redraw = true);
+            void setPCut(double pcut);
 
         private:
 
@@ -42,8 +42,8 @@ namespace hps {
 
             TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
 
-            TEveCompound* createMCParticles(EVENT::LCCollection* coll,
-                                            EVENT::LCCollection* simTrackerHits);
+            TEveElementList* createMCParticles(EVENT::LCCollection *coll,
+                                               EVENT::LCCollection *simTrackerHits);
 
             TEveElementList* createCalClusters(EVENT::LCCollection* coll);
 
@@ -59,7 +59,11 @@ namespace hps {
 
             const std::vector<TEveElementList*> getElementsByType(const std::string& typeName);
 
-            void setPCut(TEveElementList* element);
+            /**
+             * Recursively process a set of TEveTrack objects with associated MCParticle user data
+             * to apply a P cut.
+             */
+            void setPCut(TEveElement* element);
 
         private:
 

@@ -94,8 +94,8 @@ namespace hps {
             }*/
         }
 
-        // Filter MCParticle objects from P cut but do not redraw (done automatically outside this method)
-        setPCut(pcut_, false);
+        // Filter MCParticle objects from current P cut (makes P cut work when hitting next event button).
+        setPCut(pcut_);
 
         //TEveText* text = createEventText(event);
         //manager->AddElement(text);
@@ -191,18 +191,15 @@ namespace hps {
     }
 
     // Based on Druid src/BuildMCParticles.cc
-    TEveCompound* EventObjects::createMCParticles(EVENT::LCCollection *coll,
-                                                  EVENT::LCCollection *simTrackerHits) {
+    TEveElementList* EventObjects::createMCParticles(EVENT::LCCollection *coll,
+                                                     EVENT::LCCollection *simTrackerHits) {
+
+        TEveElementList* mcTracks = new TEveElementList();
 
         if (checkVerbosity(2)) {
             std::cout << "[ EventObjects ] Building MCParticle collection with size: "
                 << coll->getNumberOfElements() << std::endl;
         }
-
-        TEveCompound *mcTracks = new TEveCompound();
-        //TEveTrackList* mcTracks = new TEveTrackList();
-        //mcTracks->SetMainColor(kRed);
-        mcTracks->OpenCompound();
 
         TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
 
@@ -223,15 +220,11 @@ namespace hps {
         propsetNeutral->SetMaxZ(200);
         propsetNeutral->SetMaxOrbs(1.0);
 
-        std::map<EVENT::MCParticle*, TEveCompound*> particleMap;
+        std::map<EVENT::MCParticle*, TEveTrack*> particleMap;
 
         for (int i = 0; i < coll->getNumberOfElements(); i++) {
 
-            TEveCompound *compound = new TEveCompound();
-            compound->OpenCompound();
-
             EVENT::MCParticle *mcp = dynamic_cast<EVENT::MCParticle*>(coll->getElementAt(i));
-            particleMap[mcp] = compound;
 
             float charge = mcp->getCharge();
             double energy = mcp->getEnergy();
@@ -307,11 +300,13 @@ namespace hps {
                     charge, energy, length,
                     p.Mag()));
 
+            particleMap[mcp] = track;
+
             if (pdg) {
-                compound->SetElementName(pdg->GetName());
+                track->SetElementName(pdg->GetName());
             } else {
                 std::cerr << "[ EventObjects ] [ ERROR ] Unknown PDG code: " << mcp->getPDG() << std::endl;
-                compound->SetElementName("Unknown");
+                track->SetElementName("Unknown");
             }
 
             //TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
@@ -344,6 +339,7 @@ namespace hps {
             }
             */
 
+            // TODO: Make the length cut into a GUI setting.
             if (length > this->lengthCut_) {
                 track->MakeTrack(false);
             } else {
@@ -353,38 +349,33 @@ namespace hps {
             }
 
             track->SetUserData(new MCParticleUserData(mcp, p.Mag()));
-
-            compound->AddElement(track);
-            compound->CloseCompound();
         }
 
         for (auto it = particleMap.begin(); it != particleMap.end(); it++) {
-            auto p = it->first;
-            auto c = it->second;
-            if (p->getParents().size() > 0) {
-                auto fnd = particleMap.find(p->getParents()[0]);
+            MCParticle* particle = it->first;
+            TEveTrack* track = it->second;
+            if (particle->getParents().size() > 0) {
+                auto fnd = particleMap.find(particle->getParents()[0]);
                 if (fnd != particleMap.end()) {
-                    auto parCompound = fnd->second;
-                    parCompound->OpenCompound();
-                    parCompound->AddElement(c);
-                    parCompound->CloseCompound();
+                    TEveTrack* parent = fnd->second;
+                    parent->AddElement(track);
                 } else {
                     std::cerr << "[ EventObjects ] [ ERROR ] Failed to find parent compound object!" << std::endl;
                 }
             } else {
                 // Top-level particles with no parents.
-                mcTracks->AddElement(c);
+                mcTracks->AddElement(track);
             }
         }
 
         mcTracks->SetRnrSelfChildren(true, true);
-        mcTracks->CloseCompound();
 
         if (checkVerbosity(2)) {
             std::cout << "[ EventObjects ] Done building MCParticle collection!" << std::endl;
         }
         return mcTracks;
     }
+
 
     void EventObjects::findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                           EVENT::LCCollection* hits,
@@ -574,7 +565,7 @@ namespace hps {
         return test;
     }
 
-    void EventObjects::setPCut(double pcut, bool redraw) {
+    void EventObjects::setPCut(double pcut) {
 
         pcut_ = pcut;
 
@@ -588,36 +579,26 @@ namespace hps {
                 TEveElementList* particleList = *(it);
                 setPCut(particleList);
             }
-            if (redraw) {
-                app_->getEveManager()->FullRedraw3D(false);
-            }
         }
     }
 
-    void EventObjects::setPCut(TEveElementList* list) {
-        if (checkVerbosity(4)) {
-            std::cout << "[ EventObjects ] Setting P cut on particle list with size: " << list->GetNItems() << std::endl;
-        }
-        for (TEveElement::List_i it = list->BeginChildren();
-                it != list->EndChildren(); it++) {
-            TEveElement* elem = *(it);
-            if (elem->GetUserData() != nullptr) {
-                MCParticleUserData* particleData = (MCParticleUserData*)(elem->GetUserData());
-                if (particleData != nullptr) {
-                    double p = particleData->p();
-                    if (p < pcut_) {
-                        if (checkVerbosity(4)) {
-                            std::cout << "[ EventObjects ] Cutting particle with P: " << p << std::endl;
-                        }
-                        elem->SetRnrSelf(false);
+    void EventObjects::setPCut(TEveElement* element) {
+        if (element->GetUserData() != nullptr) {
+            MCParticleUserData* particleData = (MCParticleUserData*)(element->GetUserData());
+            if (particleData != nullptr) {
+                double p = particleData->p();
+                if (p < pcut_) {
+                    if (checkVerbosity(4)) {
+                        std::cout << "[ EventObjects ] Cutting particle with P: " << p << std::endl;
                     }
+                    element->SetRnrSelf(false);
                 }
-            } else if (dynamic_cast<TEveCompound*>(elem) != nullptr) {
-                if (checkVerbosity(4)) {
-                    std::cout << "[ EventObjects ] Recurse P cut to children..." << std::endl;
-                }
-                setPCut((TEveCompound*)elem);
             }
+        }
+        for (TEveElement::List_i it = element->BeginChildren();
+                it != element->EndChildren(); it++) {
+            TEveTrack* track = dynamic_cast<TEveTrack*>(*(it));
+            setPCut(track);
         }
     }
 
