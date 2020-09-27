@@ -7,7 +7,7 @@
 namespace hps {
 
     FileCache::FileCache(std::string cacheDir) :
-            Logger("EventObjects", INFO /* log level is hard-coded */),
+            Logger("FileCache", INFO /* log level is hard-coded */),
             cacheDir_(cacheDir) {
         createCacheDir();
     }

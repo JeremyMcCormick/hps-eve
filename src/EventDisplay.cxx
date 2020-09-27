@@ -50,8 +50,7 @@ namespace hps {
 
         SetWindowName("HPS Event Display");
 
-        det_ = new DetectorGeometry(manager, cacheDir);
-        det_->setLogLevel(logLevel);
+        det_ = new DetectorGeometry(this, cacheDir);
         if (geometryFile.size() > 0) {
             log("Opening geometry file: " + geometryFile, INFO);
             det_->loadDetectorFile(geometryFile);
@@ -154,11 +153,13 @@ namespace hps {
         return eventNumberEntry_->GetIntNumber();
     }
 
+    /*
     void EventDisplay::setLogLevel(int verbosity) {
         Logger::setLogLevel(verbosity);
         det_->setLogLevel(verbosity);
         eventManager_->setLogLevel(verbosity);
     }
+    */
 
     EventManager* EventDisplay::getEventManager() {
         return eventManager_;

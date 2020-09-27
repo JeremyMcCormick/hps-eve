@@ -21,25 +21,6 @@ namespace hps {
 
             virtual ~EventDisplay();
 
-            /**
-             * Get current event number from GUI component.
-             */
-            int getCurrentEventNumber();
-
-            EventManager* getEventManager();
-
-            TEveManager* getEveManager();
-
-            DetectorGeometry* getDetectorGeometry();
-
-            void setLogLevel(int verbosity);
-
-            double getMagFieldY();
-
-            const std::vector<std::string>& getLcioFiles();
-
-            bool excludeCollection(const std::string& collName);
-
             static EventDisplay* createEventDisplay(TEveManager* manager,
                                                     std::string geometryFile,
                                                     std::string cacheDir,
@@ -49,6 +30,27 @@ namespace hps {
                                                     int logLevel);
 
             static EventDisplay* getInstance();
+
+            EventManager* getEventManager();
+
+            TEveManager* getEveManager();
+
+            DetectorGeometry* getDetectorGeometry();
+
+            const std::vector<std::string>& getLcioFiles();
+
+            bool excludeCollection(const std::string& collName);
+
+            /*
+            void setLogLevel(int verbosity);
+            */
+
+            /**
+             * Get current event number from GUI component.
+             */
+            int getCurrentEventNumber();
+
+            double getMagFieldY();
 
             double getPCut();
 
@@ -64,6 +66,8 @@ namespace hps {
 
         private:
 
+            static EventDisplay* instance_;
+
             TEveManager* eveManager_;
             EventManager* eventManager_;
             DetectorGeometry* det_;
@@ -74,10 +78,7 @@ namespace hps {
             double bY_;
 
             TGNumberEntry* eventNumberEntry_;
-
             TGNumberEntry* PTCutEntry_;
-
-            static EventDisplay* instance_;
 
             ClassDef(EventDisplay, 1);
     };

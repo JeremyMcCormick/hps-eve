@@ -47,7 +47,7 @@ namespace hps {
 
             TEveElementList* createReconTracks(EVENT::LCCollection* coll);
 
-            TEveText* createEventText(EVENT::LCEvent* event);
+            // TEveText* createEventText(EVENT::LCEvent* event);
 
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,

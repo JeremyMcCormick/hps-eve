@@ -30,6 +30,7 @@
 #include "TEveRGBAPalette.h"
 #include "TGeoBBox.h"
 #include "TEveTrans.h"
+#include "TGListTree.h"
 
 using EVENT::LCIO;
 
@@ -84,15 +85,11 @@ namespace hps {
                 log(FINE) << "Mapping element list to type: " << typeName << std::endl;
 
                 typeMap_[typeName].push_back(elements);
-            } /*else {
-                if (checkVerbosity()) {
-                    std::cerr << "[ EventObjects ] : Unhandled collection: " << name << ":" << typeName << std::endl;
-                }
-            }*/
+            }
         }
 
         // Filter MCParticle objects from current P cut (makes P cut work when hitting next event button).
-        setPCut(pcut_);
+        setPCut(pcut_); // @suppress("Ambiguous problem")
 
         //TEveText* text = createEventText(event);
         //manager->AddElement(text);
@@ -523,17 +520,6 @@ namespace hps {
         TStyle clusStyle;
         clusStyle.SetPalette(12, clusPalette);
         return clusStyle;
-    }
-
-    TEveText* EventObjects::createEventText(EVENT::LCEvent* event) {
-        auto bbox = (TGeoBBox*) app_->getDetectorGeometry()->getGeoManager()->GetTopVolume()->GetShape();
-        double y = bbox->GetDY() / 2;
-        std::stringstream ss;
-        ss << event->getDetectorName() << " : " << event->getRunNumber() << " : " << event->getEventNumber();
-        TEveText* test = new TEveText(ss.str().c_str());
-        test->SetFontSize(16);
-        test->PtrMainTrans()->SetPos(0, y, 0);
-        return test;
     }
 
     void EventObjects::setPCut(double pcut) {

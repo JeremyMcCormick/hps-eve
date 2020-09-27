@@ -28,11 +28,13 @@ static void extractGdmlFile(const char* lcddName, const char* gdmlName);
 
 namespace hps {
 
+    class EventDisplay;
+
     class DetectorGeometry : public Logger {
 
         public:
 
-            DetectorGeometry(TEveManager* eve, std::string cacheDir);
+            DetectorGeometry(EventDisplay* app, std::string cacheDir);
 
             ~DetectorGeometry();
 

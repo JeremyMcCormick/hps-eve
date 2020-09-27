@@ -57,6 +57,8 @@ namespace hps {
 
             void loadEvent(EVENT::LCEvent* event);
 
+            /*bool getTreeSelections(std::set<std::string>& selections);*/
+
         private:
 
             IO::LCReader* reader_;

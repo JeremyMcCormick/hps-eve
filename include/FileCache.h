@@ -15,13 +15,11 @@ namespace hps {
 
             virtual ~FileCache();
 
+            void createCacheDir();
+
             bool isCached(const std::string& fileName);
 
             std::string getCachedPath(const std::string& fileName);
-
-        private:
-
-            void createCacheDir();
 
         private:
 

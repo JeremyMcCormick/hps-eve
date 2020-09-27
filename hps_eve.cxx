@@ -124,7 +124,6 @@ int main (int argc, char **argv) {
                                                         bY,
                                                         verbose);
 
-    //std::cout << ">>>> Setting log level on ED: " << verbose << std::endl;
     ed->setLogLevel(verbose);
 
     browser->SetTabTitle("Event Control", 0);

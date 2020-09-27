@@ -38,8 +38,8 @@ namespace hps {
 
             virtual void setLogLevel(int verbosity);
 
-            inline void log(std::string what, int level = INFO) {
-                log(level) << what << std::endl;
+            inline void log(std::string msg, int level = INFO) {
+                log(level) << msg << std::endl;
             }
 
             inline std::ostream& log(int level = INFO) {
@@ -50,10 +50,8 @@ namespace hps {
                 logMsg->flush();
                 logMsg->clear();
                 if (checkLevel(level)) {
-                    //std::cout << ">>>> good level: " << level << std::endl;
                     (*logMsg) << "[ " << name_ << " ] [ " << levelName(level) << " ] ";
                 } else {
-                    //std::cout << ">>>> setting failbit" << std::endl;
                     logMsg->setstate(std::ios::failbit);
                 }
                 return *logMsg;
@@ -77,19 +75,20 @@ namespace hps {
         private:
 
             inline bool checkLevel(int level) {
-                //std::cout << ">>>> checkLevel name, logger, msg: " << name_ << ", " << level_ << ", " << level << std::endl;
                 return level_ >= level;
             }
 
-            static const std::string& levelName(int level) {
+            inline static const std::string& levelName(int level) {
+                static std::string off = "OFF";
                 static std::string error = "ERROR";
                 static std::string warning = "WARNING";
                 static std::string info = "INFO";
                 static std::string fine = "FINE";
                 static std::string finer = "FINER";
                 static std::string finest = "FINEST";
-                static std::string bad = "";
                 switch (level) {
+                    case OFF:
+                        return off;
                     case ERROR:
                         return error;
                     case WARNING:

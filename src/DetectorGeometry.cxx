@@ -1,5 +1,8 @@
 #include "DetectorGeometry.h"
 
+// HPS
+#include "EventDisplay.h"
+
 // C++ standard library
 #include <iostream>
 #include <stdexcept>
@@ -111,11 +114,16 @@ void extractGdmlFile(const char* lcddName, const char* gdmlName) {
 
 namespace hps {
 
-    DetectorGeometry::DetectorGeometry(TEveManager* eve, std::string cacheDir)
-        : Logger("DetectorGeometry"),
-          geo_(nullptr),
-          eve_(eve),
-          fileCache_(new FileCache(cacheDir)) {
+    DetectorGeometry::DetectorGeometry(EventDisplay* app, std::string cacheDir) :
+            Logger("DetectorGeometry"),
+            geo_(nullptr),
+            eve_(app->getEveManager()),
+            fileCache_(new FileCache(cacheDir)) {
+
+        setLogLevel(app->getLogLevel());
+
+        fileCache_->setLogLevel(getLogLevel());
+        fileCache_->createCacheDir();
     }
 
     DetectorGeometry::~DetectorGeometry() {

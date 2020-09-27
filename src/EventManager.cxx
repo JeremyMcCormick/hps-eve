@@ -7,6 +7,10 @@
 // LCIO
 #include "IOIMPL/LCFactory.h"
 
+// ROOT
+#include "TGListTree.h"
+#include "TObject.h"
+
 ClassImp(hps::EventManager);
 
 namespace hps {
@@ -81,6 +85,8 @@ namespace hps {
     }
 
     void EventManager::loadEvent(EVENT::LCEvent* event) {
+
+        // Destroy previous event and load the next one.
         app_->getEveManager()->GetCurrentEvent()->DestroyElements();
         log() << "Loading LCIO event: " << event->getEventNumber() << std::endl;
         event_->build(app_->getEveManager(), event);
@@ -162,7 +168,7 @@ namespace hps {
 
     void EventManager::modifyPCut() {
         // Forward P cut to EventObjects.
-        event_->setPCut(app_->getPCut());
+        event_->setPCut(app_->getPCut()); // @suppress("Ambiguous problem")
 
         // Redraw the scene.
         app_->getEveManager()->FullRedraw3D(false);
