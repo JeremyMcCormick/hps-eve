@@ -120,7 +120,7 @@ int main (int argc, char **argv) {
                                                         lcioFileList,
                                                         excludeColls,
                                                         bY);
-    ed->setVerbosity(verbose);
+    ed->setLevel(verbose);
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();
