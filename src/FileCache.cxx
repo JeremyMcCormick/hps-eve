@@ -6,8 +6,9 @@
 
 namespace hps {
 
-    FileCache::FileCache(std::string cacheDir) : cacheDir_(cacheDir) {
-        setVerbosity(1); // Hard-coded to print all its log messages for now.
+    FileCache::FileCache(std::string cacheDir) :
+            Verbosity("EventObjects", 1 /* verbosity hard-coded to 1 */),
+            cacheDir_(cacheDir) {
         createCacheDir();
     }
 
@@ -25,21 +26,13 @@ namespace hps {
     }
 
     void FileCache::createCacheDir() {
-        if (checkVerbosity()) {
-            std::cout << "[ FileCache ] Creating cache dir: " << cacheDir_ << std::endl;
-        }
+        log("Creating cache directory: " + cacheDir_, INFO);
         int check = mkdir(cacheDir_.c_str(), 0755);
         if (!check) {
-            if (checkVerbosity()) {
-                std::cout << "[ FileCache ] Created cache dir!" << std::endl;
-            }
+            log("Created cache directory!", INFO);
         } else {
-            if (errno == EEXIST) {
-                if (checkVerbosity()) {
-                    std::cout << "[ FileCache ] Cache dir already exists!" << std::endl;
-                }
-            } else {
-                throw std::runtime_error("Failed to create cache dir.");
+            if (errno != EEXIST) {
+                throw std::runtime_error("Failed to create cache directory.");
             }
         }
     }

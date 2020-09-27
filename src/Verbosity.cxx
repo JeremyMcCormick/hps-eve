@@ -1,8 +1,20 @@
 #include "Verbosity.h"
 
+ClassImp(hps::Verbosity);
+
 namespace hps {
 
-    Verbosity::Verbosity(int verbosity) : verbosity_(verbosity) {
+    Verbosity::LoggerMap Verbosity::LOGGERS_ = Verbosity::LoggerMap();
+
+    Verbosity::Verbosity(std::string name,
+                         int verbose,
+                         std::ostream& logOut,
+                         std::ostream& logErr) :
+            name_(name),
+            verbosity_(verbose),
+            logOut_(logOut),
+            logErr_(logErr) {
+        LOGGERS_[name] = this;
     }
 
     Verbosity::~Verbosity() {

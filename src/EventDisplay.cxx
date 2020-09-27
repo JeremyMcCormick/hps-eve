@@ -38,6 +38,7 @@ namespace hps {
                                std::vector<std::string> lcioFileList,
                                std::set<std::string> excludeColls,
                                double bY) :
+            Verbosity("EventDisplay"),
             TGMainFrame (gClient->GetRoot(), 320, 320),
             lcioFileList_(lcioFileList),
             excludeColls_(excludeColls),
@@ -50,17 +51,13 @@ namespace hps {
 
         det_ = new DetectorGeometry(manager, cacheDir);
         if (geometryFile.size() > 0) {
-            if (checkVerbosity(1)) {
-                std::cout << "[ EventDisplay ] Opening geometry file: " << geometryFile << std::endl;
-            }
+            log("Opening geometry file: " + geometryFile, INFO);
             det_->loadDetectorFile(geometryFile);
-            if (checkVerbosity(1)) {
-                std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
-            }
+            log("Done opening geometry!");
         }
 
         if (bY == 0.0) {
-            std::cerr << "[ EventDisplay ] [ ERROR ] The fixed B-field value is zero!" << std::endl;
+            log("The fixed B-field value is zero!", WARNING);
         }
 
         eventManager_ = new EventManager(this);

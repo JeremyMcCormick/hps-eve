@@ -36,14 +36,13 @@ using EVENT::LCIO;
 namespace hps {
 
     EventObjects::EventObjects(EventDisplay* app) :
+            Verbosity("EventObjects"),
             app_(app),
             pdgdb_(TDatabasePDG::Instance()) {
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
-        if (checkVerbosity()) {
-            std::cout << "[ EventObjects ] Set new LCIO event: " << event->getEventNumber() << std::endl;
-        }
+        log(INFO) << "Set new LCIO event: " << event->getEventNumber() << std::endl;
 
         // Clear the map of types to element lists.
         typeMap_.clear();
@@ -56,9 +55,7 @@ namespace hps {
                 it++) {
             auto name = *it;
             if (app_->excludeCollection(name)) {
-                if (checkVerbosity(2)) {
-                    std::cout << "[ EventObjects ] Ignoring excluded collection: " << name << std::endl;
-                }
+                log(FINE) << "Ignoring excluded collection: " << name << std::endl;
                 continue;
             }
             EVENT::LCCollection* coll = event->getCollection(name);
@@ -77,15 +74,12 @@ namespace hps {
             }
             if (elements != nullptr) {
                 elements->SetElementName(name.c_str());
-                if (checkVerbosity(2)) {
-                    std::cout << "[ EventObjects ] Adding elements: " << name << std::endl;
-                }
+                log(FINE) << "Adding elements: " << name << std::endl;
                 elements->SetPickableRecursively(true);
                 manager->AddElement(elements);
 
-                if (checkVerbosity(2)) {
-                    std::cout << "[ EventObjects ] Mapping element list to type: " << typeName << std::endl;
-                }
+                log(FINE) << "Mapping element list to type: " << typeName << std::endl;
+
                 typeMap_[typeName].push_back(elements);
             } /*else {
                 if (checkVerbosity()) {
@@ -145,9 +139,9 @@ namespace hps {
                 max = energy;
             }
         }
-        if (checkVerbosity(2)) {
-            std::cout << "[ EventObjects ] ECAL min, max hit energy: " << min << ", " << max << std::endl;
-        }
+
+        log(FINE) << "ECAL min, max hit energy: " << min << ", " << max << std::endl;
+
         //min = min * 100;
         min = 0;
         max = max * 100;
@@ -162,18 +156,15 @@ namespace hps {
             auto y = pos[1]/10.0;
             auto z = pos[2]/10.0;
             auto hitTime = hit->getTimeCont(0);
-            if (checkVerbosity(4)) {
-                std::cout << "[ EventObjects ] Looking for ECAL crystal at: ("
-                        << x << ", " << y << ", " << z << ")" << std::endl;
-            }
+            log(FINEST) << "Looking for ECAL crystal at: ("
+                    << x << ", " << y << ", " << z << ")" << std::endl;
+
             geo->CdTop();
             TGeoNode* node = geo->FindNode((double)x, (double)y, (double)z);
-            if (node != nullptr) {
-                if (checkVerbosity(4)) {
-                    std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
-                }
+            if (node != nullptr && node != geo->GetTopNode()) {
+                log(FINEST) << "Found geo node: " << node->GetName() << std::endl;
             } else {
-                std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit!" << std::endl;
+                log("No geo node found for cal hit!", ERROR);
                 continue;
             }
             TEveElement* element = DetectorGeometry::toEveElement(geo, node);
@@ -196,10 +187,8 @@ namespace hps {
 
         TEveElementList* mcTracks = new TEveElementList();
 
-        if (checkVerbosity(2)) {
-            std::cout << "[ EventObjects ] Building MCParticle collection with size: "
+        log(FINE) << "Building MCParticle collection with size: "
                 << coll->getNumberOfElements() << std::endl;
-        }
 
         TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
 
@@ -248,13 +237,11 @@ namespace hps {
 
             TParticlePDG* pdg = pdgdb_->GetParticle(mcp->getPDG());
 
-            if (checkVerbosity(4)) {
-                std::cout << "[ EventObjects ] Processing MCParticle: charge = " << charge
-                        << "; vertex = (" << x << ", " << y << ", " << z
-                        << "); " << "momentum = (" << px << ", " << py << ", "
-                        << pz << "); " << "gen_status = " << mcp->getGeneratorStatus()
-                        << std::endl;
-            }
+            log(FINEST) << "Processing MCParticle: charge = " << charge
+                    << "; vertex = (" << x << ", " << y << ", " << z
+                    << "); " << "momentum = (" << px << ", " << py << ", "
+                    << pz << "); " << "gen_status = " << mcp->getGeneratorStatus()
+                    << std::endl;
 
             TEveRecTrack *recTrack = new TEveRecTrack();
             recTrack->fV.Set(TEveVector(x, y, z));
@@ -265,22 +252,16 @@ namespace hps {
             if (pdg) {
                 track->SetElementName(pdg->GetName());
             } else {
-                std::cerr << "[ EventObjects ] [ ERROR ] Unknown PDG code: " << mcp->getPDG() << std::endl;
+                log(WARNING) << "Unknown PDG code: " << mcp->getPDG() << std::endl;
                 track->SetElementName("Unknown");
             }
             if (charge != 0.0) {
-                if (checkVerbosity(4)) {
-                    std::cout << "[ EventObjects ] Adding charged track" << std::endl;
-                }
                 track->SetPropagator(propsetCharged);
                 track->SetMainColor(kRed);
                 //track->SetMarkerColor(kRed);
                 //track->SetMarkerStyle(kFullCircle);
                 //track->SetMarkerSize(1);
             } else {
-                if (checkVerbosity(4)) {
-                    std::cout << "[ EventObjects ] Adding neutral track" << std::endl;
-                }
                 track->SetPropagator(propsetNeutral);
                 track->SetMainColor(kYellow);
                 //track->SetMarkerColor(kYellow);
@@ -305,7 +286,7 @@ namespace hps {
             if (pdg) {
                 track->SetElementName(pdg->GetName());
             } else {
-                std::cerr << "[ EventObjects ] [ ERROR ] Unknown PDG code: " << mcp->getPDG() << std::endl;
+                log(WARNING) << "Unknown PDG code: " << mcp->getPDG() << std::endl;
                 track->SetElementName("Unknown");
             }
 
@@ -343,9 +324,7 @@ namespace hps {
             if (length > this->lengthCut_) {
                 track->MakeTrack(false);
             } else {
-                if (checkVerbosity(4)) {
-                    std::cout << "[ EventObjects] Skipping MakeTrack() for particle with path length: " << length << std::endl;
-                }
+                log(FINEST) << "Skipping track with length: " << length << std::endl;
             }
 
             track->SetUserData(new MCParticleUserData(mcp, p.Mag()));
@@ -359,8 +338,6 @@ namespace hps {
                 if (fnd != particleMap.end()) {
                     TEveTrack* parent = fnd->second;
                     parent->AddElement(track);
-                } else {
-                    std::cerr << "[ EventObjects ] [ ERROR ] Failed to find parent compound object!" << std::endl;
                 }
             } else {
                 // Top-level particles with no parents.
@@ -370,9 +347,8 @@ namespace hps {
 
         mcTracks->SetRnrSelfChildren(true, true);
 
-        if (checkVerbosity(2)) {
-            std::cout << "[ EventObjects ] Done building MCParticle collection!" << std::endl;
-        }
+        log("Done building MCParticle collection!", FINE);
+
         return mcTracks;
     }
 
@@ -391,9 +367,7 @@ namespace hps {
 
     TEveElementList* EventObjects::createCalClusters(EVENT::LCCollection* coll) {
 
-        if (checkVerbosity(2)) {
-            std::cout << "[ EventObjects ] Creating clusters: " << coll->getNumberOfElements() << std::endl;
-        }
+        log(FINE) << "Creating clusters: " << coll->getNumberOfElements() << std::endl;
 
         TGeoManager* geo = app_->getDetectorGeometry()->getGeoManager();
 
@@ -416,10 +390,9 @@ namespace hps {
             float y = clus->getPosition()[1]/10.0;
             float z = clus->getPosition()[2]/10.0;
 
-            if (checkVerbosity(4)) {
-                std::cout << "[ EventObjects ] Adding cluster at: ("
-                        << x << "," << y << ", " << z << ")" << std::endl;
-            }
+
+            log(FINEST) << "Adding cluster at: ("
+                    << x << "," << y << ", " << z << ")" << std::endl;
 
             TEvePointSet* p = new TEvePointSet(1);
             p->SetElementName("Cluster");
@@ -441,12 +414,11 @@ namespace hps {
                 auto z = pos[2]/10.0;
                 geo->CdTop();
                 TGeoNode* node = geo->FindNode((double)x, (double)y, (double)z);
-                if (node != nullptr) {
-                    if (checkVerbosity(4)) {
-                        std::cout << "[ EventObjects ] Found geo node: " << node->GetName() << std::endl;
-                    }
+                if (node != nullptr && node != geo->GetTopNode()) {
+                    log(FINEST) << "Found geo node: " << node->GetName() << std::endl;
                 } else {
-                    std::cerr << "[ EventObjects ] [ ERROR ] No geo node found for cal hit at: ("
+                    // This could happen with a bad hit position.
+                    log(ERROR) << "No geo node found for cal hit at: ("
                             << x << ", " << y << ", " << z << ")"
                             << std::endl;
                     continue;
@@ -459,9 +431,7 @@ namespace hps {
             ++currColor;
         }
 
-        if (checkVerbosity(2)) {
-            std::cout << "[ Event Objects ] Done creating clusters!" << std::endl;
-        }
+        log("Done creating clusters!", FINE);
 
         return elements;
     }
@@ -503,11 +473,9 @@ namespace hps {
             auto refPoint = track->getReferencePoint();
             double charge = omega > 0. ? charge = -1 : charge = 1;
 
-            if (this->checkVerbosity(4)) {
-                std::cout << "[ EventObjects ] Making track with (px, py, pz) = ("
-                        << px << ", " << py << ", " << pz << ")"
-                        << std::endl;
-            }
+            log(FINEST) << "Making track with (px, py, pz) = ("
+                    << px << ", " << py << ", " << pz << ")"
+                    << std::endl;
 
             TEveRecTrack *recTrack = new TEveRecTrack();
             recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
@@ -569,9 +537,8 @@ namespace hps {
 
         pcut_ = pcut;
 
-        if (checkVerbosity()) {
-            std::cout << "[ EventObjects ]: Setting new MCParticle P cut: " << pcut << std::endl;
-        }
+        log(INFO) << "Setting new MCParticle P cut: " << pcut << std::endl;
+
         const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::MCPARTICLE));
         if (particleLists.size() > 0) {
             for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
@@ -588,9 +555,7 @@ namespace hps {
             if (particleData != nullptr) {
                 double p = particleData->p();
                 if (p < pcut_) {
-                    if (checkVerbosity(4)) {
-                        std::cout << "[ EventObjects ] Cutting particle with P: " << p << std::endl;
-                    }
+                    log(FINEST) << "Cutting particle with P: " << p << std::endl;
                     element->SetRnrSelf(false);
                 }
             }
