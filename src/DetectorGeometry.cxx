@@ -112,7 +112,7 @@ void extractGdmlFile(const char* lcddName, const char* gdmlName) {
 namespace hps {
 
     DetectorGeometry::DetectorGeometry(TEveManager* eve, std::string cacheDir)
-        : Verbosity("DetectorGeometry"),
+        : Logger("DetectorGeometry"),
           geo_(nullptr),
           eve_(eve),
           fileCache_(new FileCache(cacheDir)) {

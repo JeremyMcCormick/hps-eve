@@ -36,7 +36,7 @@ using EVENT::LCIO;
 namespace hps {
 
     EventObjects::EventObjects(EventDisplay* app) :
-            Verbosity("EventObjects"),
+            Logger("EventObjects"),
             app_(app),
             pdgdb_(TDatabasePDG::Instance()) {
     }

@@ -3,9 +3,6 @@
 
 // HPS
 #include "FileCache.h"
-#include "Verbosity.h"
-
-// C++ standard library
 #include <map>
 
 // ROOT
@@ -13,6 +10,7 @@
 #include "TEveManager.h"
 #include "TEveGeoNode.h"
 #include "TEveElement.h"
+#include "Logger.h"
 
 #ifdef HAVE_CURL
 
@@ -30,7 +28,7 @@ static void extractGdmlFile(const char* lcddName, const char* gdmlName);
 
 namespace hps {
 
-    class DetectorGeometry : public Verbosity {
+    class DetectorGeometry : public Logger {
 
         public:
 

@@ -12,7 +12,7 @@ ClassImp(hps::EventManager);
 namespace hps {
 
     EventManager::EventManager(EventDisplay* app) :
-            Verbosity("EventManager"),
+            Logger("EventManager"),
             TEveEventManager("HPS Event Manager", ""),
             reader_(nullptr),
             event_(new EventObjects(app)),
@@ -86,7 +86,7 @@ namespace hps {
 
     void EventManager::GotoEvent(Int_t i) {
 
-        Verbosity::flushLoggers();
+        Logger::flushLoggers();
 
         log(INFO) << "GotoEvent: " << i << std::endl;
 
@@ -152,9 +152,9 @@ namespace hps {
         }
     }
 
-    void EventManager::setVerbosity(int verbosity) {
-        Verbosity::setVerbosity(verbosity);
-        event_->setVerbosity(verbosity);
+    void EventManager::setLevel(int verbosity) {
+        Logger::setLevel(verbosity);
+        event_->setLevel(verbosity);
     }
 
     void EventManager::modifyPCut() {

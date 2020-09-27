@@ -5,19 +5,17 @@
 #include <string>
 
 // HPS
-#include "Verbosity.h"
-
-// ROOT
 #include "TGFrame.h"
 #include "TEveManager.h"
 #include "TGNumberEntry.h"
+#include "Logger.h"
 
 namespace hps {
 
     class EventManager;
     class DetectorGeometry;
 
-    class EventDisplay : public TGMainFrame, public Verbosity {
+    class EventDisplay : public TGMainFrame, public Logger {
 
         public:
 
@@ -34,7 +32,7 @@ namespace hps {
 
             DetectorGeometry* getDetectorGeometry();
 
-            void setVerbosity(int verbosity);
+            void setLevel(int verbosity);
 
             double getMagFieldY();
 

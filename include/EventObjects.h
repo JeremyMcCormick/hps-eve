@@ -2,9 +2,6 @@
 #define HPS_EVENTOBJECTS_H_ 1
 
 // HPS
-#include "Verbosity.h"
-
-// LCIO
 #include "EVENT/LCEvent.h"
 
 // ROOT
@@ -18,13 +15,14 @@
 // LCIO
 #include "EVENT/LCObject.h"
 #include "EVENT/SimTrackerHit.h"
+#include "Logger.h"
 
 namespace hps {
 
     class DetectorGeometry;
     class EventDisplay;
 
-    class EventObjects : public Verbosity {
+    class EventObjects : public Logger {
 
         public:
 

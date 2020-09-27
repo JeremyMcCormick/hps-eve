@@ -38,7 +38,7 @@ namespace hps {
                                std::vector<std::string> lcioFileList,
                                std::set<std::string> excludeColls,
                                double bY) :
-            Verbosity("EventDisplay"),
+            Logger("EventDisplay"),
             TGMainFrame (gClient->GetRoot(), 320, 320),
             lcioFileList_(lcioFileList),
             excludeColls_(excludeColls),
@@ -152,10 +152,10 @@ namespace hps {
         return eventNumberEntry_->GetIntNumber();
     }
 
-    void EventDisplay::setVerbosity(int verbosity) {
-        Verbosity::setVerbosity(verbosity);
-        det_->setVerbosity(verbosity);
-        eventManager_->setVerbosity(verbosity);
+    void EventDisplay::setLevel(int verbosity) {
+        Logger::setLevel(verbosity);
+        det_->setLevel(verbosity);
+        eventManager_->setLevel(verbosity);
     }
 
     EventManager* EventDisplay::getEventManager() {

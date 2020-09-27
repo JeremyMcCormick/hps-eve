@@ -18,25 +18,25 @@ namespace hps {
     static const int FINER = 5;
     static const int FINEST = 6;
 
-    class Verbosity {
+    class Logger {
 
         public:
 
-            typedef std::map<std::string, Verbosity*> LoggerMap;
+            typedef std::map<std::string, Logger*> LoggerMap;
             typedef LoggerMap::iterator LoggerMapIter;
 
         public:
 
-            Verbosity(std::string name,
-                      int verbose = INFO,
+            Logger(std::string name,
+                      int level = INFO,
                       std::ostream& logOut = std::cout,
                       std::ostream& logErr = std::cerr);
 
-            virtual ~Verbosity();
+            virtual ~Logger();
 
-            int getVerbosity();
+            int getLevel();
 
-            virtual void setVerbosity(int verbosity);
+            virtual void setLevel(int verbosity);
 
             inline void log(std::string what, int level = INFO) {
                 log(level) << what << std::endl;
@@ -47,7 +47,7 @@ namespace hps {
                 if (level < INFO) {
                     logMsg = &logErr_;
                 }
-                if (checkVerbosity(level)) {
+                if (checkLevel(level)) {
                     logMsg->clear();
                     (*logMsg) << "[ " << name_ << " ] [ " << levelName(level) << "] ";
                 } else {
@@ -62,7 +62,7 @@ namespace hps {
                 logErr_.flush();
             }
 
-            static Verbosity* getLogger(std::string& name) {
+            static Logger* getLogger(std::string& name) {
                 return LOGGERS_[name];
             }
 
@@ -74,8 +74,8 @@ namespace hps {
 
         private:
 
-            inline bool checkVerbosity(int level) {
-                return verbosity_ >= level;
+            inline bool checkLevel(int level) {
+                return level_ >= level;
             }
 
             static const std::string& levelName(int level) {
@@ -113,9 +113,9 @@ namespace hps {
 
             static LoggerMap LOGGERS_;
 
-            int verbosity_{0};
+            int level_{0};
 
-            ClassDef(Verbosity, 1);
+            ClassDef(Logger, 1);
     };
 }
 
