@@ -32,7 +32,7 @@ namespace hps {
 
             DetectorGeometry* getDetectorGeometry();
 
-            void setLevel(int verbosity);
+            void setLogLevel(int verbosity);
 
             double getMagFieldY();
 
@@ -45,7 +45,8 @@ namespace hps {
                                                     std::string cacheDir,
                                                     std::vector<std::string> lcioFileList,
                                                     std::set<std::string> excludeColls,
-                                                    double bY);
+                                                    double bY,
+                                                    int logLevel);
 
             static EventDisplay* getInstance();
 
@@ -58,7 +59,8 @@ namespace hps {
                          std::string cacheDir,
                          std::vector<std::string> lcioFileList,
                          std::set<std::string> excludeColls,
-                         double bY);
+                         double bY,
+                         int logLevel);
 
         private:
 

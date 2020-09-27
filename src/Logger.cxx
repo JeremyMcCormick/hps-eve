@@ -20,11 +20,12 @@ namespace hps {
     Logger::~Logger() {
     }
 
-    int Logger::getLevel() {
+    int Logger::getLogLevel() {
         return level_;
     }
 
-    void Logger::setLevel(int verbosity) {
-        level_ = verbosity;
+    void Logger::setLogLevel(int level) {
+        //std::cout << "<<<< setting level on " << name_ << " to " << level_ << std::endl;
+        level_ = level;
     }
 }

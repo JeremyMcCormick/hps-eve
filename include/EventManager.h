@@ -38,7 +38,7 @@ namespace hps {
              */
             void SetEventNumber();
 
-            void setLevel(int verbosity);
+            void setLogLevel(int verbosity);
 
             /**
              * Modify the MCParticle P cut according to GUI setting.

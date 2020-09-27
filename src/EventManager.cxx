@@ -17,6 +17,9 @@ namespace hps {
             reader_(nullptr),
             event_(new EventObjects(app)),
             app_(app) {
+
+        // Set log level from main app.
+        setLogLevel(app_->getLogLevel());
     }
 
     EventManager::~EventManager() {
@@ -152,9 +155,9 @@ namespace hps {
         }
     }
 
-    void EventManager::setLevel(int verbosity) {
-        Logger::setLevel(verbosity);
-        event_->setLevel(verbosity);
+    void EventManager::setLogLevel(int verbosity) {
+        Logger::setLogLevel(verbosity);
+        event_->setLogLevel(verbosity);
     }
 
     void EventManager::modifyPCut() {

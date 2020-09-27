@@ -34,9 +34,9 @@ namespace hps {
 
             virtual ~Logger();
 
-            int getLevel();
+            int getLogLevel();
 
-            virtual void setLevel(int verbosity);
+            virtual void setLogLevel(int verbosity);
 
             inline void log(std::string what, int level = INFO) {
                 log(level) << what << std::endl;
@@ -47,12 +47,14 @@ namespace hps {
                 if (level < INFO) {
                     logMsg = &logErr_;
                 }
+                logMsg->flush();
+                logMsg->clear();
                 if (checkLevel(level)) {
-                    logMsg->clear();
-                    (*logMsg) << "[ " << name_ << " ] [ " << levelName(level) << "] ";
+                    //std::cout << ">>>> good level: " << level << std::endl;
+                    (*logMsg) << "[ " << name_ << " ] [ " << levelName(level) << " ] ";
                 } else {
+                    //std::cout << ">>>> setting failbit" << std::endl;
                     logMsg->setstate(std::ios::failbit);
-
                 }
                 return *logMsg;
             }
@@ -75,6 +77,7 @@ namespace hps {
         private:
 
             inline bool checkLevel(int level) {
+                //std::cout << ">>>> checkLevel name, logger, msg: " << name_ << ", " << level_ << ", " << level << std::endl;
                 return level_ >= level;
             }
 

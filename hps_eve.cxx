@@ -36,7 +36,7 @@ int main (int argc, char **argv) {
     std::vector<std::string> lcioFileList;
     std::set<std::string> excludeColls;
     std::string cacheDir(".cache");
-    int verbose = 0;
+    int verbose = hps::ERROR;
     double bY = 0.0;
 
     int c = 0;
@@ -102,6 +102,8 @@ int main (int argc, char **argv) {
     std::cout << "  -------------------------------- " << std::endl;
     std::cout << std::endl;
 
+    std::cout.flush();
+
     // Create ROOT intepreter app
     TRint *app = 0;
     app = new TRint("XXX", 0, 0);
@@ -119,8 +121,11 @@ int main (int argc, char **argv) {
                                                         cacheDir,
                                                         lcioFileList,
                                                         excludeColls,
-                                                        bY);
-    ed->setLevel(verbose);
+                                                        bY,
+                                                        verbose);
+
+    //std::cout << ">>>> Setting log level on ED: " << verbose << std::endl;
+    ed->setLogLevel(verbose);
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();

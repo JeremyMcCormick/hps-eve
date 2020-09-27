@@ -37,8 +37,9 @@ namespace hps {
                                std::string cacheDir,
                                std::vector<std::string> lcioFileList,
                                std::set<std::string> excludeColls,
-                               double bY) :
-            Logger("EventDisplay"),
+                               double bY,
+                               int logLevel) :
+            Logger("EventDisplay", logLevel),
             TGMainFrame (gClient->GetRoot(), 320, 320),
             lcioFileList_(lcioFileList),
             excludeColls_(excludeColls),
@@ -50,6 +51,7 @@ namespace hps {
         SetWindowName("HPS Event Display");
 
         det_ = new DetectorGeometry(manager, cacheDir);
+        det_->setLogLevel(logLevel);
         if (geometryFile.size() > 0) {
             log("Opening geometry file: " + geometryFile, INFO);
             det_->loadDetectorFile(geometryFile);
@@ -126,7 +128,7 @@ namespace hps {
                                              TGNumberFormat::kNESRealThree,
                                              TGNumberFormat::kNEAPositive,
                                              TGNumberFormat::kNELNoLimits,
-                                             0.001, 10.0);
+                                             0.000, 10.0);
             frmPTCut->AddFrame(PTCutEntry_);
             frmPTCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
 
@@ -152,10 +154,10 @@ namespace hps {
         return eventNumberEntry_->GetIntNumber();
     }
 
-    void EventDisplay::setLevel(int verbosity) {
-        Logger::setLevel(verbosity);
-        det_->setLevel(verbosity);
-        eventManager_->setLevel(verbosity);
+    void EventDisplay::setLogLevel(int verbosity) {
+        Logger::setLogLevel(verbosity);
+        det_->setLogLevel(verbosity);
+        eventManager_->setLogLevel(verbosity);
     }
 
     EventManager* EventDisplay::getEventManager() {
@@ -187,11 +189,18 @@ namespace hps {
                                                         std::string cacheDir,
                                                         std::vector<std::string> lcioFileList,
                                                         std::set<std::string> excludeColls,
-                                                        double bY) {
+                                                        double bY,
+                                                        int logLevel) {
         if (instance_ != nullptr) {
             throw std::runtime_error("The EventDisplay should only be created once!");
         }
-        instance_ = new EventDisplay(manager, geometryFile, cacheDir, lcioFileList, excludeColls, bY);
+        instance_ = new EventDisplay(manager,
+                                     geometryFile,
+                                     cacheDir,
+                                     lcioFileList,
+                                     excludeColls,
+                                     bY,
+                                     logLevel);
         return instance_;
     }
 

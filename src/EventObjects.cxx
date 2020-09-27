@@ -39,6 +39,9 @@ namespace hps {
             Logger("EventObjects"),
             app_(app),
             pdgdb_(TDatabasePDG::Instance()) {
+
+        // Set log level from main app.
+        setLogLevel(app_->getLogLevel());
     }
 
     void EventObjects::build(TEveManager* manager, EVENT::LCEvent* event) {
