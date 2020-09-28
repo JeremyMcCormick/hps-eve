@@ -1,10 +1,16 @@
 #!/bin/sh
 
+if [ ! -n "$ROOTSYS" ]; then
+    echo "ERROR: ROOTSYS not set!" 
+    exit 1
+fi
+
+if [ -z "$1" ]; then
+    echo "ERROR: Missing at least one LCIO file"
+    exit 1
+fi
+
 . install/bin/hps-eve-env.sh
+echo $LD_LIBRARY_PATH
 
-event_file=/work/slac/data/lcio/hpsForward_e+_0.5GeV_z-7.5_0_SLIC-v06-00-01_QGSP_BERT_HPS-PhysicsRun2019-v2-4pt5_recon.slcio
-
-#./install/bin/hps-eve -g ./HPS-PhysicsRun2019-v2-4pt5.gdml -v 0 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits $event_file
-
-# When GDML file is not provided, an LCDD file will be downloaded and GDML extracted from it.
-./install/bin/hps-eve -v 4 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits $event_file
+./install/bin/hps-eve -l 6 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits $@

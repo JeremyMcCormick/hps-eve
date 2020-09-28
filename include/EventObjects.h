@@ -2,9 +2,6 @@
 #define HPS_EVENTOBJECTS_H_ 1
 
 // HPS
-#include "Verbosity.h"
-
-// LCIO
 #include "EVENT/LCEvent.h"
 
 // ROOT
@@ -18,13 +15,14 @@
 // LCIO
 #include "EVENT/LCObject.h"
 #include "EVENT/SimTrackerHit.h"
+#include "Logger.h"
 
 namespace hps {
 
     class DetectorGeometry;
     class EventDisplay;
 
-    class EventObjects : public Verbosity {
+    class EventObjects : public Logger {
 
         public:
 
@@ -49,7 +47,7 @@ namespace hps {
 
             TEveElementList* createReconTracks(EVENT::LCCollection* coll);
 
-            TEveText* createEventText(EVENT::LCEvent* event);
+            // TEveText* createEventText(EVENT::LCEvent* event);
 
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,

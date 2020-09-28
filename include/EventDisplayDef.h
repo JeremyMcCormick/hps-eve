@@ -6,3 +6,5 @@
 #include "EventDisplay.h"
 #include "DetectorGeometry.h"
 #include "EventManager.h"
+#include "Logger.h"
+

@@ -19,7 +19,7 @@ namespace hps {
     class EventDisplay;
     class EventObjects;
 
-    class EventManager : public TEveEventManager, public Verbosity {
+    class EventManager : public TEveEventManager, public Logger {
 
         public:
 
@@ -38,7 +38,7 @@ namespace hps {
              */
             void SetEventNumber();
 
-            void setVerbosity(int verbosity);
+            void setLogLevel(int verbosity);
 
             /**
              * Modify the MCParticle P cut according to GUI setting.

@@ -46,11 +46,11 @@ install(TARGETS EventDisplay LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 set(exec_name hps-eve)
 
-add_executable(${exec_name} ${library_sources} ${PROJECT_SOURCE_DIR}/hps_eve.cxx)
+add_executable(${exec_name} ${PROJECT_SOURCE_DIR}/hps_eve.cxx)
 target_link_libraries(${exec_name}
+    EventDisplay
     ${LCIO_LCIO_LIBRARY}
     ${LCIO_SIO_LIBRARY}
-    EventDisplay
     ROOT::Core
     ROOT::Rint
     ROOT::Geom

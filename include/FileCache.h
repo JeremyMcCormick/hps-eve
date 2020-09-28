@@ -2,14 +2,12 @@
 #define HPS_FILECACHE_H_ 1
 
 // HPS
-#include "Verbosity.h"
-
-// C++ standard library
 #include <string>
+#include "Logger.h"
 
 namespace hps {
 
-    class FileCache : public Verbosity {
+    class FileCache : public Logger {
 
         public:
 
@@ -17,13 +15,11 @@ namespace hps {
 
             virtual ~FileCache();
 
+            void createCacheDir();
+
             bool isCached(const std::string& fileName);
 
             std::string getCachedPath(const std::string& fileName);
-
-        private:
-
-            void createCacheDir();
 
         private:
 

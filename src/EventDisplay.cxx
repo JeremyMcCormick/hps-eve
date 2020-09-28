@@ -3,12 +3,6 @@
 // HPS
 #include "DetectorGeometry.h"
 #include "EventManager.h"
-#include <unistd.h>
-#include <iostream>
-#include <stdexcept>
-#include <stdlib.h>
-#include <fstream>
-#include <limits>
 
 // ROOT
 #include "TGeoManager.h"
@@ -26,50 +20,69 @@
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 
+// C++ standard library
+#include <unistd.h>
+#include <iostream>
+#include <stdexcept>
+#include <stdlib.h>
+#include <fstream>
+#include <limits>
+
 ClassImp(hps::EventDisplay);
 
 namespace hps {
 
     EventDisplay* EventDisplay::instance_ = nullptr;
 
-    EventDisplay::EventDisplay(TEveManager *manager,
-                               std::string geometryFile,
-                               std::string cacheDir,
-                               std::vector<std::string> lcioFileList,
-                               std::set<std::string> excludeColls,
-                               double bY) :
+    EventDisplay::EventDisplay() :
+            Logger("EventDisplay"),
             TGMainFrame (gClient->GetRoot(), 320, 320),
-            lcioFileList_(lcioFileList),
-            excludeColls_(excludeColls),
-            eveManager_(manager),
+            eveManager_(nullptr),
             eventManager_(nullptr),
             eventNumberEntry_(nullptr),
-            bY_(bY) {
+            det_(nullptr),
+            cache_(nullptr),
+            PTCutEntry_(nullptr),
+            bY_(0) {
+    }
 
-        SetWindowName("HPS Event Display");
+    EventDisplay::~EventDisplay() {
+        delete cache_;
+    }
 
-        det_ = new DetectorGeometry(manager, cacheDir);
-        if (geometryFile.size() > 0) {
-            if (checkVerbosity(1)) {
-                std::cout << "[ EventDisplay ] Opening geometry file: " << geometryFile << std::endl;
-            }
-            det_->loadDetectorFile(geometryFile);
-            if (checkVerbosity(1)) {
-                std::cout << "[ EventDisplay ] Done opening geometry!" << std::endl;
-            }
+    void EventDisplay::initialize() {
+
+        // This pointer needs to be set externally for now before initialization.
+        if (eveManager_ == nullptr) {
+            throw std::runtime_error("The Eve manager was not set!");
         }
 
-        if (bY == 0.0) {
-            std::cerr << "[ EventDisplay ] [ ERROR ] The fixed B-field value is zero!" << std::endl;
+        // Create the file cache.
+        cache_ = new FileCache(cacheDir_);
+        cache_->setLogLevel(getLogLevel());
+        cache_->createCacheDir();
+
+        // Initialize the geometry and load detector if GDML was provided.
+        det_ = new DetectorGeometry(this, cache_);
+        det_->setLogLevel(getLogLevel());
+        if (geometryFile_.size() > 0) {
+            log("Opening geometry file: " + geometryFile_, INFO);
+            det_->loadDetectorFile(geometryFile_);
+            log("Done opening geometry!");
         }
 
+        // Create the event manager.
         eventManager_ = new EventManager(this);
         eveManager_->AddEvent(eventManager_);
         eventManager_->Open();
 
-        ///////////////////////////
-        // Start build GUI
-        ///////////////////////////
+        // Build the GUI.
+        buildGUI();
+    }
+
+    void EventDisplay::buildGUI() {
+
+        SetWindowName("HPS Event Display");
 
         TGGroupFrame *frmEvent = new TGGroupFrame(this, "Event Navigation", kHorizontalFrame);
         TGHorizontalFrame *hf = new TGHorizontalFrame(this);
@@ -129,7 +142,7 @@ namespace hps {
                                              TGNumberFormat::kNESRealThree,
                                              TGNumberFormat::kNEAPositive,
                                              TGNumberFormat::kNELNoLimits,
-                                             0.001, 10.0);
+                                             0.000, 10.0);
             frmPTCut->AddFrame(PTCutEntry_);
             frmPTCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
 
@@ -142,23 +155,10 @@ namespace hps {
         MapSubwindows();
         Resize(GetDefaultSize());
         MapWindow();
-
-        ///////////////////
-        // End build GUI
-        ///////////////////
-    }
-
-    EventDisplay::~EventDisplay() {
     }
 
     int EventDisplay::getCurrentEventNumber() {
         return eventNumberEntry_->GetIntNumber();
-    }
-
-    void EventDisplay::setVerbosity(int verbosity) {
-        Verbosity::setVerbosity(verbosity);
-        det_->setVerbosity(verbosity);
-        eventManager_->setVerbosity(verbosity);
     }
 
     EventManager* EventDisplay::getEventManager() {
@@ -185,25 +185,39 @@ namespace hps {
         return excludeColls_.find(collName) != excludeColls_.end();
     }
 
-    EventDisplay* EventDisplay::createEventDisplay(TEveManager* manager,
-                                                        std::string geometryFile,
-                                                        std::string cacheDir,
-                                                        std::vector<std::string> lcioFileList,
-                                                        std::set<std::string> excludeColls,
-                                                        double bY) {
-        if (instance_ != nullptr) {
-            throw std::runtime_error("The EventDisplay should only be created once!");
-        }
-        instance_ = new EventDisplay(manager, geometryFile, cacheDir, lcioFileList, excludeColls, bY);
-        return instance_;
-    }
-
     EventDisplay* EventDisplay::getInstance() {
+        if (instance_ == nullptr) {
+            instance_ = new EventDisplay();
+        }
         return instance_;
     }
 
     double EventDisplay::getPCut() {
         return  PTCutEntry_->GetNumber();
+    }
+
+    void EventDisplay::setEveManager(TEveManager* eveManager) {
+            eveManager_ = eveManager;
+        }
+
+    void EventDisplay::setGeometryFile(std::string geometryFile) {
+        geometryFile_ = geometryFile;
+    }
+
+    void EventDisplay::setCacheDir(std::string cacheDir) {
+        cacheDir_ = cacheDir;
+    }
+
+    void EventDisplay::addLcioFiles(std::vector<std::string> lcioFileList) {
+        lcioFileList_.insert(lcioFileList_.end(), lcioFileList.begin(), lcioFileList.end());
+    }
+
+    void EventDisplay::addExcludeCollections(std::set<std::string> excludeColls) {
+        excludeColls_.insert(excludeColls.begin(), excludeColls.end());
+    }
+
+    void EventDisplay::setMagFieldY(double bY) {
+        bY_ = bY;
     }
 
 } /* namespace hps */
