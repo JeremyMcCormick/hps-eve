@@ -4,14 +4,22 @@
 
 Dependencies you will need to have installed:
 
-- [ROOT](https://root.cern/install/) - tested only with 6.18.04
-- [LCIO](https://github.com/jeffersonlab/hps-lcio) - use the HPS LCIO fork, not the one from ILCSoft
+- [ROOT](https://root.cern/install/) - tested with version 6.18.04
+- [LCIO](https://github.com/jeffersonlab/hps-lcio) - use the HPS LCIO fork or tag v02-07-05, NOT the ILCSoft master
 
-For ROOT, see the [build from source instructions](https://root.cern/install/build_from_source/). You need to make sure that OpenGL is enabled and that the Eve library has been created by the build (typically `libEve.so` in your ROOT library installation directory). If it is missing, then make sure the appropriate graphics packages are all installed on your machine and rebuild.
+To enable automatic downloading and handling of detector data, the libxml2 and CURL libraries need to present.
+
+Here are instructions for installing them on Ubuntu using the package manager:
+
+```
+sudo apt-get install libxml2-dev libcurl4-openssl-dev
+```
+
+For ROOT, see the [build from source instructions](https://root.cern/install/build_from_source/). You need to make sure that OpenGL is enabled and that the Eve library has been created once the build completes. The library `libEve.so` should be present in your ROOT library installation directory. If it is missing, then make sure the appropriate graphics packages are all installed on your machine so that OpenGL is enabled and rebuild it.
 
 In the following instructions, it is assumed that software packages will be installed in the `/scratch` directory, but this could be replaced by any work directory on your machine where you have write access.
 
-Once ROOT has been built, you should source the setup script:
+Once ROOT has been built, you should source the setup script before starting the build procedures:
 
 ```
 . root/bin/thisroot.sh
