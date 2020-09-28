@@ -2,15 +2,17 @@
 #define HPS_DETECTORGEOMETRY_H_ 1
 
 // HPS
+#include "Logger.h"
 #include "FileCache.h"
-#include <map>
 
 // ROOT
 #include "TGeoManager.h"
 #include "TEveManager.h"
 #include "TEveGeoNode.h"
 #include "TEveElement.h"
-#include "Logger.h"
+
+// C++ standard library
+#include <map>
 
 #ifdef HAVE_CURL
 
@@ -34,16 +36,16 @@ namespace hps {
 
         public:
 
-            DetectorGeometry(EventDisplay* app, std::string cacheDir);
+            DetectorGeometry(EventDisplay* app, FileCache* cache);
 
             ~DetectorGeometry();
+
+            TGeoManager* getGeoManager();
 
             /**
              * Utility function to convert a single TGeoNode into an Eve element.
              */
             static TEveElement* toEveElement(TGeoManager* mgr, TGeoNode* node);
-
-            TGeoManager* getGeoManager();
 
             void loadDetector(const std::string& detName);
 

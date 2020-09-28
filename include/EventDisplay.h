@@ -1,14 +1,18 @@
 #ifndef HPS_EVENTDISPLAY_H_
 #define HPS_EVENTDISPLAY_H_ 1
 
-#include <vector>
-#include <string>
-
 // HPS
+#include "Logger.h"
+#include "FileCache.h"
+
+// ROOT
 #include "TGFrame.h"
 #include "TEveManager.h"
 #include "TGNumberEntry.h"
-#include "Logger.h"
+
+// C++ standard library
+#include <vector>
+#include <string>
 
 namespace hps {
 
@@ -21,15 +25,9 @@ namespace hps {
 
             virtual ~EventDisplay();
 
-            void initialize();
+            static EventDisplay* getInstance();
 
-            static EventDisplay* createEventDisplay(TEveManager* manager,
-                                                    std::string geometryFile,
-                                                    std::string cacheDir,
-                                                    std::vector<std::string> lcioFileList,
-                                                    std::set<std::string> excludeColls,
-                                                    double bY,
-                                                    int logLevel);
+            void initialize();
 
             void setEveManager(TEveManager*);
 
@@ -43,8 +41,6 @@ namespace hps {
 
             void setMagFieldY(double);
 
-            static EventDisplay* getInstance();
-
             EventManager* getEventManager();
 
             TEveManager* getEveManager();
@@ -54,10 +50,6 @@ namespace hps {
             const std::vector<std::string>& getLcioFiles();
 
             bool excludeCollection(const std::string& collName);
-
-            /*
-            void setLogLevel(int verbosity);
-            */
 
             /**
              * Get current event number from GUI component.
@@ -74,14 +66,6 @@ namespace hps {
 
             EventDisplay();
 
-            EventDisplay(TEveManager* manager,
-                         std::string geometryFile,
-                         std::string cacheDir,
-                         std::vector<std::string> lcioFileList,
-                         std::set<std::string> excludeColls,
-                         double bY,
-                         int logLevel);
-
         private:
 
             static EventDisplay* instance_;
@@ -89,10 +73,13 @@ namespace hps {
             std::string geometryFile_;
             std::string cacheDir_;
 
+            FileCache* cache_;
+
             TEveManager* eveManager_;
             //TEveBrowser* browser_;
             EventManager* eventManager_;
             DetectorGeometry* det_;
+
 
             std::vector<std::string> lcioFileList_;
             std::set<std::string> excludeColls_;

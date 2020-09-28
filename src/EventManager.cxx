@@ -22,8 +22,9 @@ namespace hps {
             event_(new EventObjects(app)),
             app_(app) {
 
-        // Set log level from main app.
+        // Set log level from main application.
         setLogLevel(app_->getLogLevel());
+        event_->setLogLevel(getLogLevel());
     }
 
     EventManager::~EventManager() {

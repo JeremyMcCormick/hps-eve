@@ -3,12 +3,6 @@
 // HPS
 #include "DetectorGeometry.h"
 #include "EventManager.h"
-#include <unistd.h>
-#include <iostream>
-#include <stdexcept>
-#include <stdlib.h>
-#include <fstream>
-#include <limits>
 
 // ROOT
 #include "TGeoManager.h"
@@ -26,32 +20,19 @@
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 
+// C++ standard library
+#include <unistd.h>
+#include <iostream>
+#include <stdexcept>
+#include <stdlib.h>
+#include <fstream>
+#include <limits>
+
 ClassImp(hps::EventDisplay);
 
 namespace hps {
 
     EventDisplay* EventDisplay::instance_ = nullptr;
-
-    EventDisplay::EventDisplay(TEveManager* manager,
-                               std::string geometryFile,
-                               std::string cacheDir,
-                               std::vector<std::string> lcioFileList,
-                               std::set<std::string> excludeColls,
-                               double bY,
-                               int logLevel) :
-            Logger("EventDisplay", logLevel),
-            TGMainFrame (gClient->GetRoot(), 320, 320),
-            eveManager_(manager),
-            geometryFile_(geometryFile),
-            cacheDir_(cacheDir),
-            lcioFileList_(lcioFileList),
-            excludeColls_(excludeColls),
-            eventManager_(nullptr),
-            eventNumberEntry_(nullptr),
-            det_(nullptr),
-            PTCutEntry_(nullptr),
-            bY_(bY) {
-    }
 
     EventDisplay::EventDisplay() :
             Logger("EventDisplay"),
@@ -60,26 +41,42 @@ namespace hps {
             eventManager_(nullptr),
             eventNumberEntry_(nullptr),
             det_(nullptr),
+            cache_(nullptr),
             PTCutEntry_(nullptr),
             bY_(0) {
-        }
-
+    }
 
     EventDisplay::~EventDisplay() {
+        delete cache_;
     }
 
     void EventDisplay::initialize() {
-        det_ = new DetectorGeometry(this, cacheDir_);
+
+        // This pointer needs to be set externally for now before initialization.
+        if (eveManager_ == nullptr) {
+            throw std::runtime_error("The Eve manager was not set!");
+        }
+
+        // Create the file cache.
+        cache_ = new FileCache(cacheDir_);
+        cache_->setLogLevel(getLogLevel());
+        cache_->createCacheDir();
+
+        // Initialize the geometry and load detector if GDML was provided.
+        det_ = new DetectorGeometry(this, cache_);
+        det_->setLogLevel(getLogLevel());
         if (geometryFile_.size() > 0) {
             log("Opening geometry file: " + geometryFile_, INFO);
             det_->loadDetectorFile(geometryFile_);
             log("Done opening geometry!");
         }
 
+        // Create the event manager.
         eventManager_ = new EventManager(this);
         eveManager_->AddEvent(eventManager_);
         eventManager_->Open();
 
+        // Build the GUI.
         buildGUI();
     }
 
@@ -164,14 +161,6 @@ namespace hps {
         return eventNumberEntry_->GetIntNumber();
     }
 
-    /*
-    void EventDisplay::setLogLevel(int verbosity) {
-        Logger::setLogLevel(verbosity);
-        det_->setLogLevel(verbosity);
-        eventManager_->setLogLevel(verbosity);
-    }
-    */
-
     EventManager* EventDisplay::getEventManager() {
         return eventManager_;
     }
@@ -194,26 +183,6 @@ namespace hps {
 
     bool EventDisplay::excludeCollection(const std::string& collName) {
         return excludeColls_.find(collName) != excludeColls_.end();
-    }
-
-    EventDisplay* EventDisplay::createEventDisplay(TEveManager* manager,
-                                                   std::string geometryFile,
-                                                   std::string cacheDir,
-                                                   std::vector<std::string> lcioFileList,
-                                                   std::set<std::string> excludeColls,
-                                                   double bY,
-                                                   int logLevel) {
-        if (instance_ != nullptr) {
-            throw std::runtime_error("The EventDisplay should only be created once!");
-        }
-        instance_ = new EventDisplay(manager,
-                                     geometryFile,
-                                     cacheDir,
-                                     lcioFileList,
-                                     excludeColls,
-                                     bY,
-                                     logLevel);
-        return instance_;
     }
 
     EventDisplay* EventDisplay::getInstance() {

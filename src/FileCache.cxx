@@ -7,9 +7,8 @@
 namespace hps {
 
     FileCache::FileCache(std::string cacheDir) :
-            Logger("FileCache", INFO /* log level is hard-coded */),
+            Logger("FileCache"),
             cacheDir_(cacheDir) {
-        createCacheDir();
     }
 
     FileCache::~FileCache() {

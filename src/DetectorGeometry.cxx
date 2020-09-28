@@ -114,20 +114,15 @@ void extractGdmlFile(const char* lcddName, const char* gdmlName) {
 
 namespace hps {
 
-    DetectorGeometry::DetectorGeometry(EventDisplay* app, std::string cacheDir) :
+    DetectorGeometry::DetectorGeometry(EventDisplay* app, FileCache* cache) :
             Logger("DetectorGeometry"),
             geo_(nullptr),
             eve_(app->getEveManager()),
-            fileCache_(new FileCache(cacheDir)) {
-
+            fileCache_(cache) {
         setLogLevel(app->getLogLevel());
-
-        fileCache_->setLogLevel(getLogLevel());
-        fileCache_->createCacheDir();
     }
 
     DetectorGeometry::~DetectorGeometry() {
-        delete fileCache_;
     }
 
     TEveElementList* DetectorGeometry::createGeoElements(TGeoManager* geo,
