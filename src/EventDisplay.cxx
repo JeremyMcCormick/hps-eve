@@ -32,7 +32,7 @@ namespace hps {
 
     EventDisplay* EventDisplay::instance_ = nullptr;
 
-    EventDisplay::EventDisplay(TEveManager *manager,
+    EventDisplay::EventDisplay(TEveManager* manager,
                                std::string geometryFile,
                                std::string cacheDir,
                                std::vector<std::string> lcioFileList,
@@ -41,33 +41,51 @@ namespace hps {
                                int logLevel) :
             Logger("EventDisplay", logLevel),
             TGMainFrame (gClient->GetRoot(), 320, 320),
+            eveManager_(manager),
+            geometryFile_(geometryFile),
+            cacheDir_(cacheDir),
             lcioFileList_(lcioFileList),
             excludeColls_(excludeColls),
-            eveManager_(manager),
             eventManager_(nullptr),
             eventNumberEntry_(nullptr),
+            det_(nullptr),
+            PTCutEntry_(nullptr),
             bY_(bY) {
+    }
 
-        SetWindowName("HPS Event Display");
-
-        det_ = new DetectorGeometry(this, cacheDir);
-        if (geometryFile.size() > 0) {
-            log("Opening geometry file: " + geometryFile, INFO);
-            det_->loadDetectorFile(geometryFile);
-            log("Done opening geometry!");
+    EventDisplay::EventDisplay() :
+            Logger("EventDisplay"),
+            TGMainFrame (gClient->GetRoot(), 320, 320),
+            eveManager_(nullptr),
+            eventManager_(nullptr),
+            eventNumberEntry_(nullptr),
+            det_(nullptr),
+            PTCutEntry_(nullptr),
+            bY_(0) {
         }
 
-        if (bY == 0.0) {
-            log("The fixed B-field value is zero!", WARNING);
+
+    EventDisplay::~EventDisplay() {
+    }
+
+    void EventDisplay::initialize() {
+        det_ = new DetectorGeometry(this, cacheDir_);
+        if (geometryFile_.size() > 0) {
+            log("Opening geometry file: " + geometryFile_, INFO);
+            det_->loadDetectorFile(geometryFile_);
+            log("Done opening geometry!");
         }
 
         eventManager_ = new EventManager(this);
         eveManager_->AddEvent(eventManager_);
         eventManager_->Open();
 
-        ///////////////////////////
-        // Start build GUI
-        ///////////////////////////
+        buildGUI();
+    }
+
+    void EventDisplay::buildGUI() {
+
+        SetWindowName("HPS Event Display");
 
         TGGroupFrame *frmEvent = new TGGroupFrame(this, "Event Navigation", kHorizontalFrame);
         TGHorizontalFrame *hf = new TGHorizontalFrame(this);
@@ -140,13 +158,6 @@ namespace hps {
         MapSubwindows();
         Resize(GetDefaultSize());
         MapWindow();
-
-        ///////////////////
-        // End build GUI
-        ///////////////////
-    }
-
-    EventDisplay::~EventDisplay() {
     }
 
     int EventDisplay::getCurrentEventNumber() {
@@ -186,12 +197,12 @@ namespace hps {
     }
 
     EventDisplay* EventDisplay::createEventDisplay(TEveManager* manager,
-                                                        std::string geometryFile,
-                                                        std::string cacheDir,
-                                                        std::vector<std::string> lcioFileList,
-                                                        std::set<std::string> excludeColls,
-                                                        double bY,
-                                                        int logLevel) {
+                                                   std::string geometryFile,
+                                                   std::string cacheDir,
+                                                   std::vector<std::string> lcioFileList,
+                                                   std::set<std::string> excludeColls,
+                                                   double bY,
+                                                   int logLevel) {
         if (instance_ != nullptr) {
             throw std::runtime_error("The EventDisplay should only be created once!");
         }
@@ -206,11 +217,38 @@ namespace hps {
     }
 
     EventDisplay* EventDisplay::getInstance() {
+        if (instance_ == nullptr) {
+            instance_ = new EventDisplay();
+        }
         return instance_;
     }
 
     double EventDisplay::getPCut() {
         return  PTCutEntry_->GetNumber();
+    }
+
+    void EventDisplay::setEveManager(TEveManager* eveManager) {
+            eveManager_ = eveManager;
+        }
+
+    void EventDisplay::setGeometryFile(std::string geometryFile) {
+        geometryFile_ = geometryFile;
+    }
+
+    void EventDisplay::setCacheDir(std::string cacheDir) {
+        cacheDir_ = cacheDir;
+    }
+
+    void EventDisplay::addLcioFiles(std::vector<std::string> lcioFileList) {
+        lcioFileList_.insert(lcioFileList_.end(), lcioFileList.begin(), lcioFileList.end());
+    }
+
+    void EventDisplay::addExcludeCollections(std::set<std::string> excludeColls) {
+        excludeColls_.insert(excludeColls.begin(), excludeColls.end());
+    }
+
+    void EventDisplay::setMagFieldY(double bY) {
+        bY_ = bY;
     }
 
 } /* namespace hps */

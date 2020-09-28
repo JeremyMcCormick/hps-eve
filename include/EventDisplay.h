@@ -21,6 +21,8 @@ namespace hps {
 
             virtual ~EventDisplay();
 
+            void initialize();
+
             static EventDisplay* createEventDisplay(TEveManager* manager,
                                                     std::string geometryFile,
                                                     std::string cacheDir,
@@ -28,6 +30,18 @@ namespace hps {
                                                     std::set<std::string> excludeColls,
                                                     double bY,
                                                     int logLevel);
+
+            void setEveManager(TEveManager*);
+
+            void setGeometryFile(std::string);
+
+            void setCacheDir(std::string);
+
+            void addLcioFiles(std::vector<std::string>);
+
+            void addExcludeCollections(std::set<std::string>);
+
+            void setMagFieldY(double);
 
             static EventDisplay* getInstance();
 
@@ -56,6 +70,10 @@ namespace hps {
 
         private:
 
+            void buildGUI();
+
+            EventDisplay();
+
             EventDisplay(TEveManager* manager,
                          std::string geometryFile,
                          std::string cacheDir,
@@ -68,14 +86,18 @@ namespace hps {
 
             static EventDisplay* instance_;
 
+            std::string geometryFile_;
+            std::string cacheDir_;
+
             TEveManager* eveManager_;
+            //TEveBrowser* browser_;
             EventManager* eventManager_;
             DetectorGeometry* det_;
 
             std::vector<std::string> lcioFileList_;
             std::set<std::string> excludeColls_;
 
-            double bY_;
+            double bY_{0.};
 
             TGNumberEntry* eventNumberEntry_;
             TGNumberEntry* PTCutEntry_;

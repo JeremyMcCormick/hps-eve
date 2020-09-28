@@ -36,7 +36,7 @@ int main (int argc, char **argv) {
     std::vector<std::string> lcioFileList;
     std::set<std::string> excludeColls;
     std::string cacheDir(".cache");
-    int verbose = hps::ERROR;
+    int logLevel = hps::ERROR;
     double bY = 0.0;
 
     int c = 0;
@@ -52,7 +52,7 @@ int main (int argc, char **argv) {
                 bY = std::stod(optarg);
                 break;
             case 'v':
-                verbose = atoi(optarg);
+                logLevel = atoi(optarg);
                 break;
             case 'c':
                 cacheDir = std::string(optarg);
@@ -83,7 +83,7 @@ int main (int argc, char **argv) {
 
     std::cout << std::endl;
     std::cout << "  -------- HPS Event Display -------- " << std::endl;
-    std::cout << "    verbose: " << verbose << std::endl;
+    std::cout << "    verbose: " << logLevel << std::endl;
     std::cout << "    geometry: " << geometryFile << std::endl;
     std::cout << "    files: " << std::endl;
     for (std::vector<std::string>::iterator it = lcioFileList.begin();
@@ -109,13 +109,14 @@ int main (int argc, char **argv) {
     app = new TRint("XXX", 0, 0);
 
     // Create Eve manager
-    TEveManager *manager = TEveManager::Create(kTRUE, "FV");
+    TEveManager* manager = TEveManager::Create(kTRUE, "FV");
 
     // Get Eve browser and embed it
-    TEveBrowser *browser = manager->GetBrowser ();
+    TEveBrowser *browser = manager->GetBrowser();
     browser->StartEmbedding(TRootBrowser::kLeft);
 
     // Create the main event display class
+    /*
     EventDisplay* ed = EventDisplay::createEventDisplay(manager,
                                                         geometryFile,
                                                         cacheDir,
@@ -123,17 +124,23 @@ int main (int argc, char **argv) {
                                                         excludeColls,
                                                         bY,
                                                         verbose);
-
-    ed->setLogLevel(verbose);
+                                                        */
+    EventDisplay* ed = EventDisplay::getInstance();
+    ed->setLogLevel(logLevel);
+    ed->setEveManager(manager);
+    ed->setGeometryFile(geometryFile);
+    ed->setCacheDir(cacheDir);
+    ed->addLcioFiles(lcioFileList);
+    ed->addExcludeCollections(excludeColls);
+    ed->setMagFieldY(bY);
+    ed->initialize();
 
     browser->SetTabTitle("Event Control", 0);
     browser->StopEmbedding();
 
-    manager->FullRedraw3D();
+    ed->getEveManager()->FullRedraw3D();
 
     app->Run(kFALSE);
-
     delete ed;
-
     return 0;
 }
