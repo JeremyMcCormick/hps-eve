@@ -3,7 +3,6 @@
 
 // HPS
 #include "Logger.h"
-#include "FileCache.h"
 
 // ROOT
 #include "TGFrame.h"
@@ -18,6 +17,7 @@ namespace hps {
 
     class EventManager;
     class DetectorGeometry;
+    class FileCache;
 
     class EventDisplay : public TGMainFrame, public Logger {
 

@@ -2,8 +2,10 @@
 #define HPS_FILECACHE_H_ 1
 
 // HPS
-#include <string>
 #include "Logger.h"
+
+// C++ standard library
+#include <string>
 
 namespace hps {
 

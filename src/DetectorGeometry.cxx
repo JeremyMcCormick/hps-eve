@@ -2,6 +2,7 @@
 
 // HPS
 #include "EventDisplay.h"
+#include "FileCache.h"
 
 // C++ standard library
 #include <iostream>

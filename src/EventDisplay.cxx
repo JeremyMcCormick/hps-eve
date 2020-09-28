@@ -3,18 +3,14 @@
 // HPS
 #include "DetectorGeometry.h"
 #include "EventManager.h"
+#include "FileCache.h"
 
 // ROOT
-#include "TGeoManager.h"
-#include "TRint.h"
 #include "TEveManager.h"
 #include "TEveBrowser.h"
 #include "TEveViewer.h"
-#include "TGeoNode.h"
-#include "TEveGeoNode.h"
 #include "TGFrame.h"
 #include "TGButton.h"
-#include "TEveEventManager.h"
 #include "TSystem.h"
 #include "TGButton.h"
 #include "TGLabel.h"
@@ -197,8 +193,8 @@ namespace hps {
     }
 
     void EventDisplay::setEveManager(TEveManager* eveManager) {
-            eveManager_ = eveManager;
-        }
+        eveManager_ = eveManager;
+    }
 
     void EventDisplay::setGeometryFile(std::string geometryFile) {
         geometryFile_ = geometryFile;

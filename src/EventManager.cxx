@@ -7,10 +7,6 @@
 // LCIO
 #include "IOIMPL/LCFactory.h"
 
-// ROOT
-#include "TGListTree.h"
-#include "TObject.h"
-
 ClassImp(hps::EventManager);
 
 namespace hps {

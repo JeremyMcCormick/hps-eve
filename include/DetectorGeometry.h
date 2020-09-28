@@ -3,7 +3,6 @@
 
 // HPS
 #include "Logger.h"
-#include "FileCache.h"
 
 // ROOT
 #include "TGeoManager.h"
@@ -31,6 +30,7 @@ static void extractGdmlFile(const char* lcddName, const char* gdmlName);
 namespace hps {
 
     class EventDisplay;
+    class FileCache;
 
     class DetectorGeometry : public Logger {
 

@@ -28,9 +28,6 @@
 #include "TEveVSDStructs.h"
 #include "TEveTrack.h"
 #include "TEveRGBAPalette.h"
-#include "TGeoBBox.h"
-#include "TEveTrans.h"
-#include "TGListTree.h"
 
 using EVENT::LCIO;
 
@@ -90,9 +87,6 @@ namespace hps {
 
         // Filter MCParticle objects from current P cut (makes P cut work when hitting next event button).
         setPCut(pcut_); // @suppress("Ambiguous problem")
-
-        //TEveText* text = createEventText(event);
-        //manager->AddElement(text);
     }
 
     EventObjects::~EventObjects() {
