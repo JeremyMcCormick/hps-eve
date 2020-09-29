@@ -30,17 +30,12 @@ namespace hps {
     };
 
 
-    class MCParticleUserData : public LCObjectUserData {
+    class TrackUserData : public LCObjectUserData {
 
         public:
 
-            MCParticleUserData(LCObject* object, double p) :
+            TrackUserData(LCObject* object, double p) :
                 LCObjectUserData(object), p_(p) {
-            }
-
-
-            inline MCParticle* getMCParticle() {
-                return dynamic_cast<MCParticle*>(object_);
             }
 
             double p() {
