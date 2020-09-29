@@ -321,7 +321,7 @@ namespace hps {
                 log(FINEST) << "Skipping track with length: " << length << std::endl;
             }
 
-            track->SetUserData(new MCParticleUserData(mcp, p.Mag()));
+            track->SetUserData(new TrackUserData(mcp, p.Mag()));
         }
 
         for (auto it = particleMap.begin(); it != particleMap.end(); it++) {
@@ -534,7 +534,7 @@ namespace hps {
 
     void EventObjects::setPCut(TEveElement* element) {
         if (element->GetUserData() != nullptr) {
-            MCParticleUserData* particleData = (MCParticleUserData*)(element->GetUserData());
+            TrackUserData* particleData = (TrackUserData*)(element->GetUserData());
             if (particleData != nullptr) {
                 double p = particleData->p();
                 if (p < pcut_) {
