@@ -87,7 +87,7 @@ namespace hps {
             double bY_{0.};
 
             TGNumberEntry* eventNumberEntry_;
-            TGNumberEntry* PTCutEntry_;
+            TGNumberEntry* MCParticlePTCutEntry_;
 
             ClassDef(EventDisplay, 1);
     };

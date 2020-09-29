@@ -53,8 +53,7 @@ namespace hps {
             const std::vector<TEveElementList*> getElementsByType(const std::string& typeName);
 
             /**
-             * Recursively process a set of TEveTrack objects with associated MCParticle user data
-             * to apply a P cut.
+             * Recursively process a set of TEveTrack objects to apply a P cut.
              */
             void setPCut(TEveElement* element);
 

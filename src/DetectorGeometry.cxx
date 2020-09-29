@@ -204,6 +204,8 @@ namespace hps {
         if (!fileCache_->isCached(lcddName)) {
             std::string detUrl = BASE_DETECTOR_URL + "/" + detName + "/" + detName + std::string(".lcdd");
             log("Downloading: " + detUrl, INFO);
+
+            // TODO: put the download method in the FileCache class
 #ifdef HAVE_CURL
             download(detUrl.c_str(),
                      fileCache_->getCachedPath(lcddName).c_str());

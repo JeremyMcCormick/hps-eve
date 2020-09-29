@@ -38,7 +38,7 @@ namespace hps {
             eventNumberEntry_(nullptr),
             det_(nullptr),
             cache_(nullptr),
-            PTCutEntry_(nullptr),
+            MCParticlePTCutEntry_(nullptr),
             bY_(0) {
     }
 
@@ -122,8 +122,7 @@ namespace hps {
             AddFrame(frmEvent, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
         }
 
-        // Display Cuts
-        // from Druid/src/GUI.cc
+        // MCParticle P cut
         {
             TGGroupFrame *frmCuts = new TGGroupFrame(this, "Cuts", kHorizontalFrame);
             TGVerticalFrame* vf = new TGVerticalFrame(frmCuts);
@@ -134,16 +133,16 @@ namespace hps {
             TGHorizontalFrame *cellSize = new TGHorizontalFrame(frmPTCut);
             TGLabel *cellLabel = new TGLabel(frmPTCut, "GeV");
             cellSize->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft));
-            PTCutEntry_ = new TGNumberEntry (frmPTCut, 0.0, 5, -1,
+            MCParticlePTCutEntry_ = new TGNumberEntry (frmPTCut, 0.0, 5, -1,
                                              TGNumberFormat::kNESRealThree,
                                              TGNumberFormat::kNEAPositive,
                                              TGNumberFormat::kNELNoLimits,
                                              0.000, 10.0);
-            frmPTCut->AddFrame(PTCutEntry_);
+            frmPTCut->AddFrame(MCParticlePTCutEntry_);
             frmPTCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
 
             // TODO: connect this to EventObjects
-            PTCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyPCut()");
+            MCParticlePTCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyPCut()");
 
             AddFrame(frmCuts, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsTop));
         }
@@ -189,7 +188,7 @@ namespace hps {
     }
 
     double EventDisplay::getPCut() {
-        return  PTCutEntry_->GetNumber();
+        return  MCParticlePTCutEntry_->GetNumber();
     }
 
     void EventDisplay::setEveManager(TEveManager* eveManager) {
