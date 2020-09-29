@@ -50,7 +50,7 @@ namespace hps {
                 logMsg->flush();
                 logMsg->clear();
                 if (checkLevel(level)) {
-                    (*logMsg) << "[ " << name_ << " ] [ " << levelName(level) << " ] ";
+                    (*logMsg) << name_ << ":" << levelName(level) << " ";
                 } else {
                     logMsg->setstate(std::ios::failbit);
                 }
