@@ -43,7 +43,12 @@ namespace hps {
             /**
              * Modify the MCParticle P cut according to GUI setting.
              */
-            void modifyPCut();
+            void modifyMCPCut();
+
+            /**
+             * Modify the Track P cut according to GUI setting.
+             */
+            void modifyTrackPCut();
 
             /*
             void Close();

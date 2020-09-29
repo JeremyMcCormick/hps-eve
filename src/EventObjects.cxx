@@ -85,8 +85,11 @@ namespace hps {
             }
         }
 
-        // Filter MCParticle objects from current P cut (makes P cut work when hitting next event button).
-        setPCut(pcut_); // @suppress("Ambiguous problem")
+        // Apply current MCParticle P cut
+        //setMCPCut(mcPcut_);
+
+        // Apply current Track P cut
+        //setTrackPCut(trackPcut_);
     }
 
     EventObjects::~EventObjects() {
@@ -489,6 +492,8 @@ namespace hps {
                     p.X(), p.Y(), p.Z(), charge, p.Mag(),
                     track->getChi2()));
 
+            eveTrack->SetUserData(new TrackUserData(track, p.Mag()));
+
             eveTrack->MakeTrack();
 
             elements->AddElement(eveTrack);
@@ -516,37 +521,50 @@ namespace hps {
         return clusStyle;
     }
 
-    void EventObjects::setPCut(double pcut) {
-
-        pcut_ = pcut;
-
+    void EventObjects::setMCPCut(double pcut) {
+        mcPcut_ = pcut;
         log(INFO) << "Setting new MCParticle P cut: " << pcut << std::endl;
-
         const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::MCPARTICLE));
         if (particleLists.size() > 0) {
             for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
                     it != particleLists.end(); it++) {
                 TEveElementList* particleList = *(it);
-                setPCut(particleList);
+                applyPCut(particleList, mcPcut_);
             }
         }
     }
 
-    void EventObjects::setPCut(TEveElement* element) {
+    void EventObjects::setTrackPCut(double pcut) {
+        trackPcut_ = pcut;
+        log(INFO) << "Setting new Track P cut: " << pcut << std::endl;
+        const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::TRACK));
+        if (particleLists.size() > 0) {
+            for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
+                    it != particleLists.end(); it++) {
+                TEveElementList* particleList = *(it);
+                log(FINE) << "Applying P cut to: " << particleList->GetElementName() << std::endl;
+                applyPCut(particleList, trackPcut_);
+            }
+        }
+    }
+
+    void EventObjects::applyPCut(TEveElement* element, double& cut) {
         if (element->GetUserData() != nullptr) {
-            TrackUserData* particleData = (TrackUserData*)(element->GetUserData());
-            if (particleData != nullptr) {
-                double p = particleData->p();
-                if (p < pcut_) {
-                    log(FINEST) << "Cutting particle with P: " << p << std::endl;
+            TrackUserData* trackData = (TrackUserData*)(element->GetUserData());
+            if (trackData != nullptr) {
+                double p = trackData->p();
+                if (p < cut) {
+                    log(FINEST) << "Cutting Track with P: " << p << std::endl;
                     element->SetRnrSelf(false);
+                } else {
+                    element->SetRnrSelf(true);
                 }
             }
         }
         for (TEveElement::List_i it = element->BeginChildren();
                 it != element->EndChildren(); it++) {
             TEveTrack* track = dynamic_cast<TEveTrack*>(*(it));
-            setPCut(track);
+            applyPCut(track, cut);
         }
     }
 

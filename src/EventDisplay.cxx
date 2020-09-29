@@ -38,7 +38,8 @@ namespace hps {
             eventNumberEntry_(nullptr),
             det_(nullptr),
             cache_(nullptr),
-            MCParticlePTCutEntry_(nullptr),
+            MCParticlePCutEntry_(nullptr),
+            TrackPCutEntry_(nullptr),
             bY_(0) {
     }
 
@@ -122,30 +123,47 @@ namespace hps {
             AddFrame(frmEvent, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
         }
 
-        // MCParticle P cut
+        // Display cuts
         {
             TGGroupFrame *frmCuts = new TGGroupFrame(this, "Cuts", kHorizontalFrame);
             TGVerticalFrame* vf = new TGVerticalFrame(frmCuts);
             frmCuts->AddFrame(vf);
 
-            TGGroupFrame *frmPTCut = new TGGroupFrame(vf, "MCParticle P Cut: ", kHorizontalFrame);
-            vf->AddFrame(frmPTCut, new TGLayoutHints (kLHintsLeft, 2, 2, 0, 0));
-            TGHorizontalFrame *cellSize = new TGHorizontalFrame(frmPTCut);
-            TGLabel *cellLabel = new TGLabel(frmPTCut, "GeV");
+            // MCParticle P Cut
+            TGGroupFrame *frmMCParticlePCut = new TGGroupFrame(vf, "MCParticle P Cut: ", kHorizontalFrame);
+            vf->AddFrame(frmMCParticlePCut, new TGLayoutHints (kLHintsLeft, 2, 2, 2, 2));
+            TGHorizontalFrame *cellSize = new TGHorizontalFrame(frmMCParticlePCut);
+            TGLabel *cellLabel = new TGLabel(frmMCParticlePCut, "GeV");
             cellSize->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft));
-            MCParticlePTCutEntry_ = new TGNumberEntry (frmPTCut, 0.0, 5, -1,
+            MCParticlePCutEntry_ = new TGNumberEntry(frmMCParticlePCut, 0.0, 5, -1,
                                              TGNumberFormat::kNESRealThree,
-                                             TGNumberFormat::kNEAPositive,
+                                             TGNumberFormat::kNEANonNegative,
                                              TGNumberFormat::kNELNoLimits,
                                              0.000, 10.0);
-            frmPTCut->AddFrame(MCParticlePTCutEntry_);
-            frmPTCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
+            frmMCParticlePCut->AddFrame(MCParticlePCutEntry_);
+            frmMCParticlePCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
+            MCParticlePCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyMCPCut()");
 
-            // TODO: connect this to EventObjects
-            MCParticlePTCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyPCut()");
+            // Track P Cut
+            TGGroupFrame *frmTrackPCut = new TGGroupFrame(vf, "Track P Cut: ", kHorizontalFrame);
+            vf->AddFrame(frmTrackPCut, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
+            cellSize = new TGHorizontalFrame(frmTrackPCut);
+            cellLabel = new TGLabel(frmTrackPCut, "GeV");
+            cellSize->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft));
+            TrackPCutEntry_ = new TGNumberEntry(frmTrackPCut, 0.0, 5, -1,
+                                                TGNumberFormat::kNESRealThree,
+                                                TGNumberFormat::kNEANonNegative,
+                                                TGNumberFormat::kNELNoLimits,
+                                                0.000, 10.0);
+            frmTrackPCut->AddFrame(TrackPCutEntry_);
+            frmTrackPCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
+            TrackPCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyTrackPCut()");
 
             AddFrame(frmCuts, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsTop));
         }
+
+        // Track P cut
+
 
         MapSubwindows();
         Resize(GetDefaultSize());
@@ -187,8 +205,12 @@ namespace hps {
         return instance_;
     }
 
-    double EventDisplay::getPCut() {
-        return  MCParticlePTCutEntry_->GetNumber();
+    double EventDisplay::getMCPCut() {
+        return MCParticlePCutEntry_->GetNumber();
+    }
+
+    double EventDisplay::getTrackPCut() {
+        return TrackPCutEntry_->GetNumber();
     }
 
     void EventDisplay::setEveManager(TEveManager* eveManager) {

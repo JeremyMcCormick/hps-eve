@@ -58,7 +58,9 @@ namespace hps {
 
             double getMagFieldY();
 
-            double getPCut();
+            double getMCPCut();
+
+            double getTrackPCut();
 
         private:
 
@@ -87,7 +89,8 @@ namespace hps {
             double bY_{0.};
 
             TGNumberEntry* eventNumberEntry_;
-            TGNumberEntry* MCParticlePTCutEntry_;
+            TGNumberEntry* MCParticlePCutEntry_;
+            TGNumberEntry* TrackPCutEntry_;
 
             ClassDef(EventDisplay, 1);
     };

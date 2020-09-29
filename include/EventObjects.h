@@ -29,7 +29,9 @@ namespace hps {
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
-            void setPCut(double pcut);
+            void setMCPCut(double pcut);
+
+            void setTrackPCut(double pcut);
 
         private:
 
@@ -55,7 +57,7 @@ namespace hps {
             /**
              * Recursively process a set of TEveTrack objects to apply a P cut.
              */
-            void setPCut(TEveElement* element);
+            void applyPCut(TEveElement* element, double& cut);
 
         private:
 
@@ -64,8 +66,11 @@ namespace hps {
             // Length cut for displaying particle trajectories in centimeters (hard-coded for now)
             double lengthCut_{1.0};
 
-            // P cut for MCParticles which can be set in GUI
-            double pcut_{0.0};
+            // P cut for MCParticles
+            double mcPcut_{0.0};
+
+            // P cut for Recon Tracks
+            double trackPcut_{0.0};
 
             // Map of LCIO types to Eve element lists.
             std::map<std::string, std::vector<TEveElementList*>> typeMap_;

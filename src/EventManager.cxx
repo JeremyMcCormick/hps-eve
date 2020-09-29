@@ -163,9 +163,17 @@ namespace hps {
         event_->setLogLevel(verbosity);
     }
 
-    void EventManager::modifyPCut() {
+    void EventManager::modifyMCPCut() {
         // Forward P cut to EventObjects.
-        event_->setPCut(app_->getPCut()); // @suppress("Ambiguous problem")
+        event_->setMCPCut(app_->getMCPCut());
+
+        // Redraw the scene.
+        app_->getEveManager()->FullRedraw3D(false);
+    }
+
+    void EventManager::modifyTrackPCut() {
+        // Forward P cut to EventObjects.
+        event_->setTrackPCut(app_->getTrackPCut());
 
         // Redraw the scene.
         app_->getEveManager()->FullRedraw3D(false);
