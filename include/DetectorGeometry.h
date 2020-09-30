@@ -13,14 +13,6 @@
 // C++ standard library
 #include <map>
 
-#ifdef HAVE_CURL
-
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
-
-static void download(const char* url, const char* filename);
-
-#endif
-
 #ifdef HAVE_LIBXML2
 
 static void extractGdmlFile(const char* lcddName, const char* gdmlName);

@@ -7,6 +7,14 @@
 // C++ standard library
 #include <string>
 
+#ifdef HAVE_CURL
+
+static size_t _write_data(void *ptr, size_t size, size_t nmemb, void *stream);
+
+static void _download(const char* url, const char* filename);
+
+#endif
+
 namespace hps {
 
     class FileCache : public Logger {
@@ -22,6 +30,8 @@ namespace hps {
             bool isCached(const std::string& fileName);
 
             std::string getCachedPath(const std::string& fileName);
+
+            void download(const char* url, const char* outfile);
 
         private:
 
