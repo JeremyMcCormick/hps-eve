@@ -75,6 +75,8 @@ namespace hps {
                 throw std::runtime_error("Failed to get detector name from LCIO file!");
             }
         }
+
+        LogHandler::flushAll();
     }
 
     void EventManager::NextEvent() {
@@ -91,8 +93,6 @@ namespace hps {
     }
 
     void EventManager::GotoEvent(Int_t i) {
-
-        Logger::flushLoggers();
 
         log(INFO) << "GotoEvent: " << i << std::endl;
 
@@ -136,6 +136,8 @@ namespace hps {
             log(ERROR) << "Failed to read next event!" << std::endl;
         }
         app_->getEveManager()->FullRedraw3D(false);
+
+        LogHandler::flushAll();
     }
 
     void EventManager::PrevEvent() {
