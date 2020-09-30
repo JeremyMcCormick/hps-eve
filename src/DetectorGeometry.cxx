@@ -154,7 +154,7 @@ namespace hps {
 
         if (!fileCache_->isCached(lcddName)) {
             std::string detUrl = BASE_DETECTOR_URL + "/" + detName + "/" + detName + std::string(".lcdd");
-            fileCache_->download(detUrl.c_str(), lcddName.c_str());
+            fileCache_->cache(detUrl.c_str(), lcddName.c_str());
             if (!fileCache_->isCached(lcddName)) {
                 log("Failed to cache LCD file.", ERROR);
                 throw new std::runtime_error("Failed to cache LCD file.");

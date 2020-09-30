@@ -31,7 +31,7 @@ namespace hps {
 
             std::string getCachedPath(const std::string& fileName);
 
-            void download(const char* url, const char* outfile);
+            void cache(const char* url, const char* outfile);
 
         private:
 

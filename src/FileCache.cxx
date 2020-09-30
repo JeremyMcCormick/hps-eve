@@ -85,8 +85,8 @@ namespace hps {
         }
     }
 
-    void FileCache::download(const char* url, const char* outfile) {
-        log(INFO) << "Downloading: " << url << std::endl;
+    void FileCache::cache(const char* url, const char* outfile) {
+        log(INFO) << "Downloading: " << url << " -> " << outfile << std::endl;
 #ifdef HAVE_CURL
         _download(url, getCachedPath(outfile).c_str());
 #else
