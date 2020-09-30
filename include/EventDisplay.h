@@ -62,6 +62,8 @@ namespace hps {
 
             double getTrackPCut();
 
+            double getChi2Cut();
+
         private:
 
             void buildGUI();
@@ -75,12 +77,11 @@ namespace hps {
             std::string geometryFile_;
             std::string cacheDir_;
 
-            FileCache* cache_;
+            FileCache* cache_{nullptr};
 
-            TEveManager* eveManager_;
-            //TEveBrowser* browser_;
-            EventManager* eventManager_;
-            DetectorGeometry* det_;
+            TEveManager* eveManager_{nullptr};
+            EventManager* eventManager_{nullptr};
+            DetectorGeometry* det_{nullptr};
 
 
             std::vector<std::string> lcioFileList_;
@@ -88,9 +89,10 @@ namespace hps {
 
             double bY_{0.};
 
-            TGNumberEntry* eventNumberEntry_;
-            TGNumberEntry* MCParticlePCutEntry_;
-            TGNumberEntry* TrackPCutEntry_;
+            TGNumberEntry* eventNumberEntry_{nullptr};
+            TGNumberEntry* MCParticlePCutEntry_{nullptr};
+            TGNumberEntry* trackPCutEntry_{nullptr};
+            TGNumberEntry* chi2CutEntry_{nullptr};
 
             ClassDef(EventDisplay, 1);
     };

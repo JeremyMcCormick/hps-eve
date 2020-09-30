@@ -50,6 +50,8 @@ namespace hps {
              */
             void modifyTrackPCut();
 
+            void modifyChi2Cut();
+
             /*
             void Close();
             void AfterNewEventLoaded();

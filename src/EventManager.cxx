@@ -164,18 +164,17 @@ namespace hps {
     }
 
     void EventManager::modifyMCPCut() {
-        // Forward P cut to EventObjects.
         event_->setMCPCut(app_->getMCPCut());
-
-        // Redraw the scene.
         app_->getEveManager()->FullRedraw3D(false);
     }
 
     void EventManager::modifyTrackPCut() {
-        // Forward P cut to EventObjects.
         event_->setTrackPCut(app_->getTrackPCut());
+        app_->getEveManager()->FullRedraw3D(false);
+    }
 
-        // Redraw the scene.
+    void EventManager::modifyChi2Cut() {
+        event_->setChi2Cut(app_->getChi2Cut());
         app_->getEveManager()->FullRedraw3D(false);
     }
 

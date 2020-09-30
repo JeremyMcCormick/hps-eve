@@ -32,15 +32,7 @@ namespace hps {
 
     EventDisplay::EventDisplay() :
             Logger("EventDisplay"),
-            TGMainFrame (gClient->GetRoot(), 320, 320),
-            eveManager_(nullptr),
-            eventManager_(nullptr),
-            eventNumberEntry_(nullptr),
-            det_(nullptr),
-            cache_(nullptr),
-            MCParticlePCutEntry_(nullptr),
-            TrackPCutEntry_(nullptr),
-            bY_(0) {
+            TGMainFrame (gClient->GetRoot(), 320, 320) {
     }
 
     EventDisplay::~EventDisplay() {
@@ -129,7 +121,7 @@ namespace hps {
             TGVerticalFrame* vf = new TGVerticalFrame(frmCuts);
             frmCuts->AddFrame(vf);
 
-            // MCParticle P Cut
+            // MCParticle P cut
             TGGroupFrame *frmMCParticlePCut = new TGGroupFrame(vf, "MCParticle P Cut: ", kHorizontalFrame);
             vf->AddFrame(frmMCParticlePCut, new TGLayoutHints (kLHintsLeft, 2, 2, 2, 2));
             TGHorizontalFrame *cellSize = new TGHorizontalFrame(frmMCParticlePCut);
@@ -144,26 +136,35 @@ namespace hps {
             frmMCParticlePCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
             MCParticlePCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyMCPCut()");
 
-            // Track P Cut
+            // Track P cut
             TGGroupFrame *frmTrackPCut = new TGGroupFrame(vf, "Track P Cut: ", kHorizontalFrame);
             vf->AddFrame(frmTrackPCut, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
             cellSize = new TGHorizontalFrame(frmTrackPCut);
             cellLabel = new TGLabel(frmTrackPCut, "GeV");
             cellSize->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft));
-            TrackPCutEntry_ = new TGNumberEntry(frmTrackPCut, 0.0, 5, -1,
+            trackPCutEntry_ = new TGNumberEntry(frmTrackPCut, 0.0, 5, -1,
                                                 TGNumberFormat::kNESRealThree,
                                                 TGNumberFormat::kNEANonNegative,
                                                 TGNumberFormat::kNELNoLimits,
                                                 0.000, 10.0);
-            frmTrackPCut->AddFrame(TrackPCutEntry_);
+            frmTrackPCut->AddFrame(trackPCutEntry_);
             frmTrackPCut->AddFrame(cellLabel, new TGLayoutHints(kLHintsBottom, 2, 0, 0, 0));
-            TrackPCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyTrackPCut()");
+            trackPCutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyTrackPCut()");
+
+            // Track chi2 cut
+            TGGroupFrame* frmChi2Cut = new TGGroupFrame(vf, "Track chi2 cut:", kHorizontalFrame);
+            vf->AddFrame(frmChi2Cut, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
+            cellSize->AddFrame(cellLabel, new TGLayoutHints(kLHintsLeft));
+            chi2CutEntry_ = new TGNumberEntry(frmChi2Cut, 40.0, 5, -1,
+                                              TGNumberFormat::kNESRealTwo,
+                                              TGNumberFormat::kNEAPositive,
+                                              TGNumberFormat::kNELNoLimits,
+                                              0.01, 999.0);
+            frmChi2Cut->AddFrame(chi2CutEntry_);
+            chi2CutEntry_->Connect ("ValueSet(Long_t)", "hps::EventManager", eventManager_, "modifyChi2Cut()");
 
             AddFrame(frmCuts, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsTop));
         }
-
-        // Track P cut
-
 
         MapSubwindows();
         Resize(GetDefaultSize());
@@ -210,7 +211,11 @@ namespace hps {
     }
 
     double EventDisplay::getTrackPCut() {
-        return TrackPCutEntry_->GetNumber();
+        return trackPCutEntry_->GetNumber();
+    }
+
+    double EventDisplay::getChi2Cut() {
+        return chi2CutEntry_->GetNumber();
     }
 
     void EventDisplay::setEveManager(TEveManager* eveManager) {

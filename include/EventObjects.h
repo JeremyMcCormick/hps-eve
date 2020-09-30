@@ -29,9 +29,11 @@ namespace hps {
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
-            void setMCPCut(double pcut);
+            void setMCPCut(double cut);
 
-            void setTrackPCut(double pcut);
+            void setTrackPCut(double cut);
+
+            void setChi2Cut(double cut);
 
         private:
 
@@ -59,6 +61,8 @@ namespace hps {
              */
             void applyPCut(TEveElement* element, double& cut);
 
+            void applyChi2Cut(TEveElementList* trackList);
+
         private:
 
             EventDisplay* app_;
@@ -67,10 +71,13 @@ namespace hps {
             double lengthCut_{1.0};
 
             // P cut for MCParticles
-            double mcPcut_{0.0};
+            double mcPCut{0.0};
 
             // P cut for Recon Tracks
-            double trackPcut_{0.0};
+            double trackPCut{0.0};
+
+            // chi2 cut for Recon Tracks
+            double chi2Cut_{9999.0};
 
             // Map of LCIO types to Eve element lists.
             std::map<std::string, std::vector<TEveElementList*>> typeMap_;

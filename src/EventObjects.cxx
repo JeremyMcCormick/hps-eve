@@ -521,29 +521,29 @@ namespace hps {
         return clusStyle;
     }
 
-    void EventObjects::setMCPCut(double pcut) {
-        mcPcut_ = pcut;
-        log(INFO) << "Setting new MCParticle P cut: " << pcut << std::endl;
+    void EventObjects::setMCPCut(double cut) {
+        mcPCut = cut;
+        log(INFO) << "Setting new MCParticle P cut: " << cut << std::endl;
         const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::MCPARTICLE));
         if (particleLists.size() > 0) {
             for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
                     it != particleLists.end(); it++) {
                 TEveElementList* particleList = *(it);
-                applyPCut(particleList, mcPcut_);
+                applyPCut(particleList, mcPCut);
             }
         }
     }
 
-    void EventObjects::setTrackPCut(double pcut) {
-        trackPcut_ = pcut;
-        log(INFO) << "Setting new Track P cut: " << pcut << std::endl;
-        const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::TRACK));
-        if (particleLists.size() > 0) {
-            for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
-                    it != particleLists.end(); it++) {
+    void EventObjects::setTrackPCut(double cut) {
+        trackPCut = cut;
+        log(INFO) << "Setting new Track P cut: " << cut << std::endl;
+        const std::vector<TEveElementList*>& trackLists = getElementsByType(std::string(LCIO::TRACK));
+        if (trackLists.size() > 0) {
+            for (std::vector<TEveElementList*>::const_iterator it = trackLists.begin();
+                    it != trackLists.end(); it++) {
                 TEveElementList* particleList = *(it);
                 log(FINE) << "Applying P cut to: " << particleList->GetElementName() << std::endl;
-                applyPCut(particleList, trackPcut_);
+                applyPCut(particleList, trackPCut);
             }
         }
     }
@@ -565,6 +565,37 @@ namespace hps {
                 it != element->EndChildren(); it++) {
             TEveTrack* track = dynamic_cast<TEveTrack*>(*(it));
             applyPCut(track, cut);
+        }
+    }
+
+    void EventObjects::setChi2Cut(double cut) {
+        chi2Cut_ = cut;
+        log(INFO) << "Setting new Track chi2 cut: " << cut << std::endl;
+        const std::vector<TEveElementList*>& trackLists = getElementsByType(std::string(LCIO::TRACK));
+        if (trackLists.size() > 0) {
+            for (std::vector<TEveElementList*>::const_iterator it = trackLists.begin();
+                    it != trackLists.end(); it++) {
+                TEveElementList* trackList = *(it);
+                applyChi2Cut(trackList);
+            }
+        }
+    }
+
+    void EventObjects::applyChi2Cut(TEveElementList* trackList) {
+        for (TEveElementList::List_i it = trackList->BeginChildren();
+                it != trackList->EndChildren();
+                it++ ) {
+            TEveElement* element = *it;
+            if (element->GetUserData() != nullptr) {
+                LCObjectUserData* userData = (LCObjectUserData*) element->GetUserData();
+                EVENT::Track* track = (EVENT::Track*) userData->getLCObject();
+                if (track->getChi2() > chi2Cut_) {
+                    log(FINEST) << "Cutting Track with chi2: " << track->getChi2() << std::endl;
+                    element->SetRnrSelf(false);
+                } else {
+                    element->SetRnrSelf(true);
+                }
+            }
         }
     }
 
