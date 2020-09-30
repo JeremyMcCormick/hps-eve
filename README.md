@@ -76,7 +76,7 @@ $ ./install/bin/hps-eve
 Usage: hps-eve [args] [LCIO files]
     -g [gdml file]
     -b [bY]
-    -v [verbose]
+    -l [level]
     -e [exclude coll]
     -c [cache dir]
 GDML file is required if curl and libxml2 were not enabled.
@@ -90,16 +90,16 @@ The `-g` argument can be used to supply your own GDML geometry file (typically n
 
 The `-b` argument is used to specify a fixed B-field value for track propagation. For 2019 data, the value `1.034` can be used (notice the sign is flipped from the typical HPS convention).
 
-The `-v` switch specifies a verbosity level from 0 (no output) to 4 (very verbose output).
+The `-l` switch specifies a log level from 0 (no output) to 6 (very verbose output).
 
-The `-e` argument can be used multiple times to specify collections that Eve should completely ignore.
+The `-e` argument can be used multiple times to specify names of data collections that should be completely ignored.
 
-The `-c` argument specifies a cache dir for downloading detector files. You can typically leave this alone, and the directory `.cache` will be created in your current working directory.
+The `-c` argument specifies a cache dir for downloading detector files. (By default, the directory `.cache` will be created in your current working directory.)
 
 Here is an example showing typical command line usage:
 
 ```
-./install/bin/hps-eve -v 2 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits events.slcio
+./install/bin/hps-eve -l 2 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits events.slcio
 ```
 
-This will run with verbose level 2 using a fixed B-field value of 1.034, excluding several collections, with data loaded from the file `events.slcio`.
+This will run with log level 2 using a fixed B-field value of 1.034, excluding several collections, with data loaded from the file `events.slcio`.
