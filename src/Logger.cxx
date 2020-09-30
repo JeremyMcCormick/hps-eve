@@ -5,16 +5,19 @@ ClassImp(hps::Logger);
 namespace hps {
 
     Logger::LoggerMap Logger::LOGGERS_ = Logger::LoggerMap();
+    LogHandler::LogHandlerMap LogHandler::HANDLERS_ = LogHandler::LogHandlerMap();
+
+    std::string LogHandler::DEFAULT = std::string("DEFAULT");
 
     Logger::Logger(std::string name,
                    int level,
-                   std::ostream& logOut,
-                   std::ostream& logErr) :
+                   LogHandler* handler) :
             name_(name),
-            level_(level),
-            logOut_(logOut),
-            logErr_(logErr) {
+            level_(level) {
         LOGGERS_[name] = this;
+        if (handler == nullptr) {
+            handler_ = LogHandler::getDefault();
+        }
     }
 
     Logger::~Logger() {
@@ -25,7 +28,6 @@ namespace hps {
     }
 
     void Logger::setLogLevel(int level) {
-        //std::cout << "<<<< setting level on " << name_ << " to " << level_ << std::endl;
         level_ = level;
     }
 }

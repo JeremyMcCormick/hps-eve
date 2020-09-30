@@ -7,10 +7,6 @@
 // LCIO
 #include "IOIMPL/LCFactory.h"
 
-// ROOT
-#include "TGListTree.h"
-#include "TObject.h"
-
 ClassImp(hps::EventManager);
 
 namespace hps {
@@ -79,6 +75,8 @@ namespace hps {
                 throw std::runtime_error("Failed to get detector name from LCIO file!");
             }
         }
+
+        LogHandler::flushAll();
     }
 
     void EventManager::NextEvent() {
@@ -95,8 +93,6 @@ namespace hps {
     }
 
     void EventManager::GotoEvent(Int_t i) {
-
-        Logger::flushLoggers();
 
         log(INFO) << "GotoEvent: " << i << std::endl;
 
@@ -140,6 +136,8 @@ namespace hps {
             log(ERROR) << "Failed to read next event!" << std::endl;
         }
         app_->getEveManager()->FullRedraw3D(false);
+
+        LogHandler::flushAll();
     }
 
     void EventManager::PrevEvent() {
@@ -167,11 +165,18 @@ namespace hps {
         event_->setLogLevel(verbosity);
     }
 
-    void EventManager::modifyPCut() {
-        // Forward P cut to EventObjects.
-        event_->setPCut(app_->getPCut()); // @suppress("Ambiguous problem")
+    void EventManager::modifyMCPCut() {
+        event_->setMCPCut(app_->getMCPCut());
+        app_->getEveManager()->FullRedraw3D(false);
+    }
 
-        // Redraw the scene.
+    void EventManager::modifyTrackPCut() {
+        event_->setTrackPCut(app_->getTrackPCut());
+        app_->getEveManager()->FullRedraw3D(false);
+    }
+
+    void EventManager::modifyChi2Cut() {
+        event_->setChi2Cut(app_->getChi2Cut());
         app_->getEveManager()->FullRedraw3D(false);
     }
 

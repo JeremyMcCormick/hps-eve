@@ -18,6 +18,58 @@ namespace hps {
     static const int FINER = 5;
     static const int FINEST = 6;
 
+    class LogHandler {
+
+        public:
+
+            typedef std::map<std::string, LogHandler*> LogHandlerMap;
+            typedef LogHandlerMap::iterator LogHandlerMapIter;
+
+        public:
+
+            LogHandler(std::string name,
+                       std::ostream* logOut = &std::cout,
+                       std::ostream* logErr = &std::cerr) :
+                       name_(name),
+                       logOut_(logOut),
+                       logErr_(logErr) {
+            }
+
+            std::ostream* getOutputStream() {
+                return logOut_;
+            }
+
+            std::ostream* getErrorStream() {
+                return logErr_;
+            }
+
+            static LogHandler* getDefault() {
+                if (HANDLERS_.find(DEFAULT) == HANDLERS_.end()) {
+                    HANDLERS_[DEFAULT] = new LogHandler(DEFAULT);
+                }
+                return HANDLERS_[DEFAULT];
+            }
+
+            static void flushAll() {
+                for (LogHandlerMapIter it = HANDLERS_.begin();
+                        it != HANDLERS_.end();
+                        it++) {
+                    it->second->getOutputStream()->flush();
+                    it->second->getErrorStream()->flush();
+                }
+            }
+
+        private:
+
+            std::string name_;
+            std::ostream* logOut_;
+            std::ostream* logErr_;
+
+            static std::string DEFAULT;
+
+            static LogHandlerMap HANDLERS_;
+    };
+
     class Logger {
 
         public:
@@ -28,9 +80,8 @@ namespace hps {
         public:
 
             Logger(std::string name,
-                      int level = INFO,
-                      std::ostream& logOut = std::cout,
-                      std::ostream& logErr = std::cerr);
+                   int level = INFO,
+                   LogHandler* handler = nullptr);
 
             virtual ~Logger();
 
@@ -43,33 +94,22 @@ namespace hps {
             }
 
             inline std::ostream& log(int level = INFO) {
-                std::ostream* logMsg = &logOut_;
+                std::ostream* logMsg = handler_->getOutputStream();
                 if (level < INFO) {
-                    logMsg = &logErr_;
+                    logMsg = handler_->getErrorStream();
                 }
                 logMsg->flush();
                 logMsg->clear();
                 if (checkLevel(level)) {
-                    (*logMsg) << "[ " << name_ << " ] [ " << levelName(level) << " ] ";
+                    (*logMsg) << name_ << ":" << levelName(level) << " ";
                 } else {
                     logMsg->setstate(std::ios::failbit);
                 }
                 return *logMsg;
             }
 
-            void flush() {
-                logOut_.flush();
-                logErr_.flush();
-            }
-
             static Logger* getLogger(std::string& name) {
                 return LOGGERS_[name];
-            }
-
-            static void flushLoggers() {
-                for (LoggerMapIter it = LOGGERS_.begin(); it != LOGGERS_.end(); it++) {
-                    it->second->flush();
-                }
             }
 
         private:
@@ -110,8 +150,7 @@ namespace hps {
 
             std::string name_;
 
-            std::ostream& logOut_;
-            std::ostream& logErr_;
+            LogHandler* handler_;
 
             static LoggerMap LOGGERS_;
 

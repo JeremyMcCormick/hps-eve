@@ -28,9 +28,6 @@
 #include "TEveVSDStructs.h"
 #include "TEveTrack.h"
 #include "TEveRGBAPalette.h"
-#include "TGeoBBox.h"
-#include "TEveTrans.h"
-#include "TGListTree.h"
 
 using EVENT::LCIO;
 
@@ -88,11 +85,11 @@ namespace hps {
             }
         }
 
-        // Filter MCParticle objects from current P cut (makes P cut work when hitting next event button).
-        setPCut(pcut_); // @suppress("Ambiguous problem")
+        // Apply current MCParticle P cut
+        //setMCPCut(mcPcut_);
 
-        //TEveText* text = createEventText(event);
-        //manager->AddElement(text);
+        // Apply current Track P cut
+        //setTrackPCut(trackPcut_);
     }
 
     EventObjects::~EventObjects() {
@@ -327,7 +324,7 @@ namespace hps {
                 log(FINEST) << "Skipping track with length: " << length << std::endl;
             }
 
-            track->SetUserData(new MCParticleUserData(mcp, p.Mag()));
+            track->SetUserData(new TrackUserData(mcp, p.Mag()));
         }
 
         for (auto it = particleMap.begin(); it != particleMap.end(); it++) {
@@ -495,6 +492,8 @@ namespace hps {
                     p.X(), p.Y(), p.Z(), charge, p.Mag(),
                     track->getChi2()));
 
+            eveTrack->SetUserData(new TrackUserData(track, p.Mag()));
+
             eveTrack->MakeTrack();
 
             elements->AddElement(eveTrack);
@@ -522,37 +521,81 @@ namespace hps {
         return clusStyle;
     }
 
-    void EventObjects::setPCut(double pcut) {
-
-        pcut_ = pcut;
-
-        log(INFO) << "Setting new MCParticle P cut: " << pcut << std::endl;
-
+    void EventObjects::setMCPCut(double cut) {
+        mcPCut = cut;
+        log(INFO) << "Setting new MCParticle P cut: " << cut << std::endl;
         const std::vector<TEveElementList*>& particleLists = getElementsByType(std::string(LCIO::MCPARTICLE));
         if (particleLists.size() > 0) {
             for (std::vector<TEveElementList*>::const_iterator it = particleLists.begin();
                     it != particleLists.end(); it++) {
                 TEveElementList* particleList = *(it);
-                setPCut(particleList);
+                applyPCut(particleList, mcPCut);
             }
         }
     }
 
-    void EventObjects::setPCut(TEveElement* element) {
+    void EventObjects::setTrackPCut(double cut) {
+        trackPCut = cut;
+        log(INFO) << "Setting new Track P cut: " << cut << std::endl;
+        const std::vector<TEveElementList*>& trackLists = getElementsByType(std::string(LCIO::TRACK));
+        if (trackLists.size() > 0) {
+            for (std::vector<TEveElementList*>::const_iterator it = trackLists.begin();
+                    it != trackLists.end(); it++) {
+                TEveElementList* particleList = *(it);
+                log(FINE) << "Applying P cut to: " << particleList->GetElementName() << std::endl;
+                applyPCut(particleList, trackPCut);
+            }
+        }
+    }
+
+    void EventObjects::applyPCut(TEveElement* element, double& cut) {
         if (element->GetUserData() != nullptr) {
-            MCParticleUserData* particleData = (MCParticleUserData*)(element->GetUserData());
-            if (particleData != nullptr) {
-                double p = particleData->p();
-                if (p < pcut_) {
-                    log(FINEST) << "Cutting particle with P: " << p << std::endl;
+            TrackUserData* trackData = (TrackUserData*)(element->GetUserData());
+            if (trackData != nullptr) {
+                double p = trackData->p();
+                if (p < cut) {
+                    log(FINEST) << "Cutting Track with P: " << p << std::endl;
                     element->SetRnrSelf(false);
+                } else {
+                    element->SetRnrSelf(true);
                 }
             }
         }
         for (TEveElement::List_i it = element->BeginChildren();
                 it != element->EndChildren(); it++) {
             TEveTrack* track = dynamic_cast<TEveTrack*>(*(it));
-            setPCut(track);
+            applyPCut(track, cut);
+        }
+    }
+
+    void EventObjects::setChi2Cut(double cut) {
+        chi2Cut_ = cut;
+        log(INFO) << "Setting new Track chi2 cut: " << cut << std::endl;
+        const std::vector<TEveElementList*>& trackLists = getElementsByType(std::string(LCIO::TRACK));
+        if (trackLists.size() > 0) {
+            for (std::vector<TEveElementList*>::const_iterator it = trackLists.begin();
+                    it != trackLists.end(); it++) {
+                TEveElementList* trackList = *(it);
+                applyChi2Cut(trackList);
+            }
+        }
+    }
+
+    void EventObjects::applyChi2Cut(TEveElementList* trackList) {
+        for (TEveElementList::List_i it = trackList->BeginChildren();
+                it != trackList->EndChildren();
+                it++ ) {
+            TEveElement* element = *it;
+            if (element->GetUserData() != nullptr) {
+                LCObjectUserData* userData = (LCObjectUserData*) element->GetUserData();
+                EVENT::Track* track = (EVENT::Track*) userData->getLCObject();
+                if (track->getChi2() > chi2Cut_) {
+                    log(FINEST) << "Cutting Track with chi2: " << track->getChi2() << std::endl;
+                    element->SetRnrSelf(false);
+                } else {
+                    element->SetRnrSelf(true);
+                }
+            }
         }
     }
 

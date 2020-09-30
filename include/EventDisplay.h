@@ -3,7 +3,6 @@
 
 // HPS
 #include "Logger.h"
-#include "FileCache.h"
 
 // ROOT
 #include "TGFrame.h"
@@ -18,6 +17,7 @@ namespace hps {
 
     class EventManager;
     class DetectorGeometry;
+    class FileCache;
 
     class EventDisplay : public TGMainFrame, public Logger {
 
@@ -58,7 +58,11 @@ namespace hps {
 
             double getMagFieldY();
 
-            double getPCut();
+            double getMCPCut();
+
+            double getTrackPCut();
+
+            double getChi2Cut();
 
         private:
 
@@ -73,12 +77,11 @@ namespace hps {
             std::string geometryFile_;
             std::string cacheDir_;
 
-            FileCache* cache_;
+            FileCache* cache_{nullptr};
 
-            TEveManager* eveManager_;
-            //TEveBrowser* browser_;
-            EventManager* eventManager_;
-            DetectorGeometry* det_;
+            TEveManager* eveManager_{nullptr};
+            EventManager* eventManager_{nullptr};
+            DetectorGeometry* det_{nullptr};
 
 
             std::vector<std::string> lcioFileList_;
@@ -86,8 +89,10 @@ namespace hps {
 
             double bY_{0.};
 
-            TGNumberEntry* eventNumberEntry_;
-            TGNumberEntry* PTCutEntry_;
+            TGNumberEntry* eventNumberEntry_{nullptr};
+            TGNumberEntry* MCParticlePCutEntry_{nullptr};
+            TGNumberEntry* trackPCutEntry_{nullptr};
+            TGNumberEntry* chi2CutEntry_{nullptr};
 
             ClassDef(EventDisplay, 1);
     };

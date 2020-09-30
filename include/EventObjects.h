@@ -6,11 +6,8 @@
 
 // ROOT
 #include "TEveManager.h"
-#include "TGeoManager.h"
 #include "TStyle.h"
-#include "TEveTrack.h"
 #include "TDatabasePDG.h"
-#include "TEveText.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -32,7 +29,11 @@ namespace hps {
 
             void build(TEveManager* manager, EVENT::LCEvent* event);
 
-            void setPCut(double pcut);
+            void setMCPCut(double cut);
+
+            void setTrackPCut(double cut);
+
+            void setChi2Cut(double cut);
 
         private:
 
@@ -47,8 +48,6 @@ namespace hps {
 
             TEveElementList* createReconTracks(EVENT::LCCollection* coll);
 
-            // TEveText* createEventText(EVENT::LCEvent* event);
-
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,
                                            EVENT::MCParticle* p);
@@ -58,10 +57,11 @@ namespace hps {
             const std::vector<TEveElementList*> getElementsByType(const std::string& typeName);
 
             /**
-             * Recursively process a set of TEveTrack objects with associated MCParticle user data
-             * to apply a P cut.
+             * Recursively process a set of TEveTrack objects to apply a P cut.
              */
-            void setPCut(TEveElement* element);
+            void applyPCut(TEveElement* element, double& cut);
+
+            void applyChi2Cut(TEveElementList* trackList);
 
         private:
 
@@ -70,8 +70,14 @@ namespace hps {
             // Length cut for displaying particle trajectories in centimeters (hard-coded for now)
             double lengthCut_{1.0};
 
-            // P cut for MCParticles which can be set in GUI
-            double pcut_{0.0};
+            // P cut for MCParticles
+            double mcPCut{0.0};
+
+            // P cut for Recon Tracks
+            double trackPCut{0.0};
+
+            // chi2 cut for Recon Tracks
+            double chi2Cut_{9999.0};
 
             // Map of LCIO types to Eve element lists.
             std::map<std::string, std::vector<TEveElementList*>> typeMap_;
