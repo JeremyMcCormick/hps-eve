@@ -41,12 +41,16 @@ namespace hps {
 
             TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
 
-            TEveElementList* createMCParticles(EVENT::LCCollection *coll,
-                                               EVENT::LCCollection *simTrackerHits);
+            TEveElementList* createMCParticles(EVENT::LCCollection *coll /*,
+                                               EVENT::LCCollection *simTrackerHits*/);
 
             TEveElementList* createCalClusters(EVENT::LCCollection* coll);
 
             TEveElementList* createReconTracks(EVENT::LCCollection* coll);
+
+            TEveElementList* createTrackerHits(EVENT::LCCollection* coll);
+
+            TEveElementList* createReconstructedParticles(EVENT::LCCollection* coll);
 
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,
@@ -66,9 +70,6 @@ namespace hps {
         private:
 
             EventDisplay* app_;
-
-            // Length cut for displaying particle trajectories in centimeters (hard-coded for now)
-            double lengthCut_{1.0};
 
             // P cut for MCParticles
             double mcPCut{0.0};

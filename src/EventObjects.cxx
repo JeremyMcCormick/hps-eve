@@ -18,6 +18,7 @@
 #include "EVENT/MCParticle.h"
 #include "EVENT/Cluster.h"
 #include "EVENT/Track.h"
+#include "EVENT/ReconstructedParticle.h"
 
 // ROOT
 #include "TEveElement.h"
@@ -48,7 +49,7 @@ namespace hps {
         // Clear the map of types to element lists.
         typeMap_.clear();
 
-        EVENT::LCCollection* simTrackerHits = event->getCollection("TrackerHits");
+        //EVENT::LCCollection* simTrackerHits = event->getCollection("TrackerHits");
 
         const std::vector<std::string>* collNames = event->getCollectionNames();
         for (std::vector<std::string>::const_iterator it = collNames->begin();
@@ -67,12 +68,14 @@ namespace hps {
             } else if (typeName == LCIO::SIMCALORIMETERHIT) {
                 elements = createSimCalorimeterHits(coll);
             } else if (typeName == LCIO::MCPARTICLE) {
-                elements = createMCParticles(coll, simTrackerHits);
+                elements = createMCParticles(coll /*, simTrackerHits*/);
             } else if (typeName == LCIO::CLUSTER) {
                 elements = createCalClusters(coll);
             } else if (typeName == LCIO::TRACK) {
                 elements = createReconTracks(coll);
-            }
+            } /*else if (typeName == LCIO::TRACKERHIT) {
+                elements = createTrackerHits(coll);
+            }*/
             if (elements != nullptr) {
                 elements->SetElementName(name.c_str());
                 log(FINE) << "Adding elements: " << name << std::endl;
@@ -179,8 +182,8 @@ namespace hps {
     }
 
     // Based on Druid src/BuildMCParticles.cc
-    TEveElementList* EventObjects::createMCParticles(EVENT::LCCollection *coll,
-                                                     EVENT::LCCollection *simTrackerHits) {
+    TEveElementList* EventObjects::createMCParticles(EVENT::LCCollection *coll /*,
+                                                     EVENT::LCCollection *simTrackerHits*/) {
 
         TEveElementList* mcTracks = new TEveElementList();
 
@@ -194,10 +197,7 @@ namespace hps {
         propsetCharged->SetMaxR(150);
         propsetCharged->SetMaxZ(200);
         propsetCharged->SetMaxOrbs(2.0);
-        //propsetCharged->SetRnrReferences(true);
-        //propsetCharged->RefPMAtt().SetMarkerColor(kRed);
-        //propsetCharged->RefPMAtt().SetMarkerStyle(kFullCircle);
-        //propsetCharged->RefPMAtt().SetMarkerSize(1);
+        propsetCharged->SetFitDecay(true);
 
         TEveTrackPropagator *propsetNeutral = new TEveTrackPropagator();
         propsetNeutral->SetMagFieldObj(new TEveMagFieldConst(0.0, app_->getMagFieldY(), 0.0));
@@ -205,6 +205,7 @@ namespace hps {
         propsetNeutral->SetMaxR(150);
         propsetNeutral->SetMaxZ(200);
         propsetNeutral->SetMaxOrbs(1.0);
+        propsetNeutral->SetFitDecay(true);
 
         std::map<EVENT::MCParticle*, TEveTrack*> particleMap;
 
@@ -255,15 +256,9 @@ namespace hps {
             if (charge != 0.0) {
                 track->SetPropagator(propsetCharged);
                 track->SetMainColor(kRed);
-                //track->SetMarkerColor(kRed);
-                //track->SetMarkerStyle(kFullCircle);
-                //track->SetMarkerSize(1);
             } else {
                 track->SetPropagator(propsetNeutral);
                 track->SetMainColor(kYellow);
-                //track->SetMarkerColor(kYellow);
-                //track->SetMarkerStyle(kFullCircle);
-                //track->SetMarkerSize(1);
             }
 
             TVector3 p(px, py, pz);
@@ -287,42 +282,16 @@ namespace hps {
                 track->SetElementName("Unknown");
             }
 
-            //TEvePathMark* pm1 = new TEvePathMark(TEvePathMark::kReference);
-            //TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay);
-
-            /*
-            std::vector<EVENT::SimTrackerHit*> particleHits;
-            findSimTrackerHits(particleHits, simTrackerHits, p);
-            if (particleHits.size() > 0) {
-                if (verbose_) {
-                    std::cout << "[ EventObjects ] Found hits for particle: " << particleHits.size() << std::endl;
-                }
-                for (std::vector<EVENT::SimTrackerHit*>::iterator it = particleHits.begin();
-                        it != particleHits.end(); it++) {
-                    auto simHit = *it;
-                    TEveVector hit(
-                            (float) simHit->getPosition()[0]/10.0,
-                            (float) simHit->getPosition()[1]/10.0,
-                            (float) simHit->getPosition()[2]/10.0);
-                    if (verbose_) {
-                        std::cout << "[ EventObjects ] Adding path mark at: ("
-                                << hit.fX << ", " << hit.fY << ", " << hit.fZ << ")"
-                                << std::endl;
-                    }
-                    TEvePathMark* pm = new TEvePathMark(TEvePathMark::kReference);
-                    pm->fV.Set(hit);
-                    track->AddPathMark(*pm);
-                }
-                track->SetRnrPoints(true);
+            // Decay point
+            TEvePathMark* pmDecay = new TEvePathMark(TEvePathMark::kDecay);
+            const double* endPoint = mcp->getEndpoint();
+            if (endPoint != nullptr) {
+                TEveVector v(endPoint[0]/10., endPoint[1]/10., endPoint[2]/10.);
+                TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay, v);
+                track->AddPathMark(*pm3);
             }
-            */
 
-            // TODO: Make the length cut into a GUI setting.
-            if (length > this->lengthCut_) {
-                track->MakeTrack(false);
-            } else {
-                log(FINEST) << "Skipping track with length: " << length << std::endl;
-            }
+            track->MakeTrack(false);
 
             track->SetUserData(new TrackUserData(mcp, p.Mag()));
         }
@@ -447,6 +416,13 @@ namespace hps {
         propsetCharged->SetMaxR(150);
         propsetCharged->SetMaxZ(200);
         propsetCharged->SetMaxOrbs(2.0);
+        propsetCharged->SetFitReferences(true);
+        /*
+        propsetCharged->SetFitDaughters(true);
+        propsetCharged->SetFitCluster2Ds(false);
+        propsetCharged->SetFitDecay(false);
+        propsetCharged->SetFitLineSegments(false);
+        */
 
         for (int i = 0; i < coll->getNumberOfElements(); i++) {
 
@@ -484,6 +460,29 @@ namespace hps {
             eveTrack->SetPropagator(propsetCharged);
             eveTrack->SetMainColor(kGreen);
 
+            // For "rotated" hits, use this correction from PF
+            // x->z, y->x, z->y
+
+            // Path marks for hits
+            /*
+            eveTrack->SetMarkerColor(kGreen);
+            eveTrack->SetMarkerStyle(kFullCircle);
+            eveTrack->SetMarkerSize(1);
+            const EVENT::TrackerHitVec& hits = track->getTrackerHits();
+            for (EVENT::TrackerHitVec::const_iterator it = hits.begin(); it != hits.end();
+                    it++) {
+                EVENT::TrackerHit* hit = *it;
+                const double* hitPos = hit->getPosition();
+                TEveVector v(hitPos[0]/10.0, hitPos[1]/10., hitPos[2]/10.);
+                TEvePathMark* pm = new TEvePathMark(TEvePathMark::kReference, v, hit->getTime());
+                eveTrack->AddPathMark(*pm);
+                log(FINEST) << "Added TrackerHit path mark at: ("
+                        << hitPos[0] << ", " << hitPos[1] << ", " << hitPos[2] << ") [mm]"
+                        << std::endl;
+            }
+            eveTrack->SetRnrPoints(true);
+            */
+
             eveTrack->SetElementTitle(Form("Recon Track\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
@@ -499,6 +498,30 @@ namespace hps {
             elements->AddElement(eveTrack);
         }
 
+        return elements;
+    }
+
+    TEveElementList* EventObjects::createTrackerHits(EVENT::LCCollection* coll) {
+        TEveElementList* elements = new TEveElementList();
+        for (int i=0; i<coll->getNumberOfElements(); i++) {
+            EVENT::TrackerHit* hit = dynamic_cast<EVENT::TrackerHit*>(coll->getElementAt(i));
+            auto x = hit->getPosition()[0];
+            auto y = hit->getPosition()[1];
+            auto z = hit->getPosition()[2];
+            auto hitTime = hit->getTime();
+            auto edep = hit->getEDep();
+            TEvePointSet* p = new TEvePointSet(1);
+            p->SetElementName("TrackerHit");
+            p->SetMarkerStyle(kFullCircle);
+            p->SetMarkerSize(1.0);
+            p->SetPoint(0, x/10.0, y/10.0, z/10.0);
+            p->SetMarkerColor(kGreen);
+            p->SetTitle(Form("Tracker Hit\n"
+                    "(x, y, z) = (%.3f, %.3f, %.3f)\n"
+                    "Time = %f, EDep = %f",
+                    x, y, z, hitTime, edep));
+            elements->AddElement(p);
+        }
         return elements;
     }
 
@@ -597,6 +620,20 @@ namespace hps {
                 }
             }
         }
+    }
+
+    TEveElementList* EventObjects::createReconstructedParticles(EVENT::LCCollection* coll) {
+        TEveElementList* elements = new TEveElementList();
+        for (int i = 0; i < coll->getNumberOfElements(); i++) {
+            EVENT::ReconstructedParticle* particle =
+                    dynamic_cast<EVENT::ReconstructedParticle*>(coll->getElementAt(i));
+
+            auto tracks = particle->getTracks();
+            auto clusters = particle->getClusters();
+            auto particles = particle->getParticles();
+
+        }
+        return elements;
     }
 
     const std::vector<TEveElementList*> EventObjects::getElementsByType(const std::string& typeName) {
