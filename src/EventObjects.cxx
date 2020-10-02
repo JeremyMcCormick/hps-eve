@@ -66,7 +66,7 @@ namespace hps {
             } else if (typeName == LCIO::SIMCALORIMETERHIT) {
                 elements = createSimCalorimeterHits(collection);
             } else if (typeName == LCIO::MCPARTICLE) {
-                elements = createMCParticles(collection /*, simTrackerHits*/);
+                elements = createMCParticles(collection);
             } else if (typeName == LCIO::CLUSTER) {
                 elements = createCalClusters(collection);
             } else if (typeName == LCIO::TRACK) {
@@ -74,12 +74,10 @@ namespace hps {
             }
             if (elements != nullptr) {
                 elements->SetElementName(collectionName.c_str());
-                log(FINE) << "Adding elements from collection: " << collectionName << std::endl;
                 elements->SetPickableRecursively(true);
                 manager->AddElement(elements);
-
-                //log(FINE) << "Mapping element list to type: " << typeName << std::endl;
                 typeMap_[typeName].push_back(elements);
+                log(FINE) << "Added elements from collection: " << collectionName << std::endl;
             }
         }
 
