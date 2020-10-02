@@ -9,6 +9,9 @@
 #include "TEveManager.h"
 #include "TGNumberEntry.h"
 
+// LCIO
+#include "EVENT/LCCollection.h"
+
 // C++ standard library
 #include <vector>
 #include <string>
@@ -29,6 +32,8 @@ namespace hps {
 
             void initialize();
 
+            void printConfig();
+
             void setEveManager(TEveManager*);
 
             void setGeometryFile(std::string);
@@ -37,7 +42,9 @@ namespace hps {
 
             void addLcioFiles(std::vector<std::string>);
 
-            void addExcludeCollections(std::set<std::string>);
+            void addExcludeCollectionNames(std::set<std::string>);
+
+            void addExcludeCollectionTypes(std::set<std::string>);
 
             void setMagFieldY(double);
 
@@ -49,7 +56,7 @@ namespace hps {
 
             const std::vector<std::string>& getLcioFiles();
 
-            bool excludeCollection(const std::string& collName);
+            bool excludeCollection(const std::string& collName, EVENT::LCCollection* collection);
 
             /**
              * Get current event number from GUI component.
@@ -83,9 +90,9 @@ namespace hps {
             EventManager* eventManager_{nullptr};
             DetectorGeometry* det_{nullptr};
 
-
             std::vector<std::string> lcioFileList_;
-            std::set<std::string> excludeColls_;
+            std::set<std::string> excludeCollectionNames_;
+            std::set<std::string> excludeCollectionTypes_;
 
             double bY_{0.};
 

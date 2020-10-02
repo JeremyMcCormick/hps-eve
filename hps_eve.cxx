@@ -34,7 +34,8 @@ int main (int argc, char **argv) {
 
     std::string geometryFile;
     std::vector<std::string> lcioFileList;
-    std::set<std::string> excludeColls;
+    std::set<std::string> excludeCollectionNames;
+    std::set<std::string> excludeCollectionTypes;
     std::string cacheDir(".cache");
     int logLevel = hps::ERROR;
     double bY = 0.0;
@@ -46,8 +47,10 @@ int main (int argc, char **argv) {
                 geometryFile = std::string(optarg);
                 break;
             case 'e':
-                excludeColls.insert(std::string(optarg));
+                excludeCollectionNames.insert(std::string(optarg));
                 break;
+            case 't':
+                excludeCollectionTypes.insert(std::string(optarg));
             case 'b':
                 bY = std::stod(optarg);
                 break;
@@ -99,7 +102,8 @@ int main (int argc, char **argv) {
     ed->setGeometryFile(geometryFile);
     ed->setCacheDir(cacheDir);
     ed->addLcioFiles(lcioFileList);
-    ed->addExcludeCollections(excludeColls);
+    ed->addExcludeCollectionNames(excludeCollectionNames);
+    ed->addExcludeCollectionTypes(excludeCollectionTypes);
     ed->setMagFieldY(bY);
     ed->initialize();
 

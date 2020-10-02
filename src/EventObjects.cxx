@@ -49,41 +49,36 @@ namespace hps {
         // Clear the map of types to element lists.
         typeMap_.clear();
 
-        //EVENT::LCCollection* simTrackerHits = event->getCollection("TrackerHits");
-
         const std::vector<std::string>* collNames = event->getCollectionNames();
         for (std::vector<std::string>::const_iterator it = collNames->begin();
                 it != collNames->end();
                 it++) {
-            auto name = *it;
-            if (app_->excludeCollection(name)) {
-                log(FINE) << "Ignoring excluded collection: " << name << std::endl;
+            auto collectionName = *it;
+            EVENT::LCCollection* collection = event->getCollection(collectionName);
+            if (app_->excludeCollection(collectionName, collection)) {
+                log(FINE) << "Excluded collection: " << collectionName << std::endl;
                 continue;
             }
-            EVENT::LCCollection* coll = event->getCollection(name);
             TEveElementList* elements = nullptr;
-            auto typeName = coll->getTypeName();
+            auto typeName = collection->getTypeName();
             if (typeName == LCIO::SIMTRACKERHIT) {
-                elements = createSimTrackerHits(coll);
+                elements = createSimTrackerHits(collection);
             } else if (typeName == LCIO::SIMCALORIMETERHIT) {
-                elements = createSimCalorimeterHits(coll);
+                elements = createSimCalorimeterHits(collection);
             } else if (typeName == LCIO::MCPARTICLE) {
-                elements = createMCParticles(coll /*, simTrackerHits*/);
+                elements = createMCParticles(collection /*, simTrackerHits*/);
             } else if (typeName == LCIO::CLUSTER) {
-                elements = createCalClusters(coll);
+                elements = createCalClusters(collection);
             } else if (typeName == LCIO::TRACK) {
-                elements = createReconTracks(coll);
-            } /*else if (typeName == LCIO::TRACKERHIT) {
-                elements = createTrackerHits(coll);
-            }*/
+                elements = createReconTracks(collection);
+            }
             if (elements != nullptr) {
-                elements->SetElementName(name.c_str());
-                log(FINE) << "Adding elements: " << name << std::endl;
+                elements->SetElementName(collectionName.c_str());
+                log(FINE) << "Adding elements from collection: " << collectionName << std::endl;
                 elements->SetPickableRecursively(true);
                 manager->AddElement(elements);
 
-                log(FINE) << "Mapping element list to type: " << typeName << std::endl;
-
+                //log(FINE) << "Mapping element list to type: " << typeName << std::endl;
                 typeMap_[typeName].push_back(elements);
             }
         }
@@ -142,7 +137,6 @@ namespace hps {
 
         log(FINE) << "ECAL min, max hit energy: " << min << ", " << max << std::endl;
 
-        //min = min * 100;
         min = 0;
         max = max * 100;
 
@@ -182,8 +176,7 @@ namespace hps {
     }
 
     // Based on Druid src/BuildMCParticles.cc
-    TEveElementList* EventObjects::createMCParticles(EVENT::LCCollection *coll /*,
-                                                     EVENT::LCCollection *simTrackerHits*/) {
+    TEveElementList* EventObjects::createMCParticles(EVENT::LCCollection *coll) {
 
         TEveElementList* mcTracks = new TEveElementList();
 
@@ -498,30 +491,6 @@ namespace hps {
             elements->AddElement(eveTrack);
         }
 
-        return elements;
-    }
-
-    TEveElementList* EventObjects::createTrackerHits(EVENT::LCCollection* coll) {
-        TEveElementList* elements = new TEveElementList();
-        for (int i=0; i<coll->getNumberOfElements(); i++) {
-            EVENT::TrackerHit* hit = dynamic_cast<EVENT::TrackerHit*>(coll->getElementAt(i));
-            auto x = hit->getPosition()[0];
-            auto y = hit->getPosition()[1];
-            auto z = hit->getPosition()[2];
-            auto hitTime = hit->getTime();
-            auto edep = hit->getEDep();
-            TEvePointSet* p = new TEvePointSet(1);
-            p->SetElementName("TrackerHit");
-            p->SetMarkerStyle(kFullCircle);
-            p->SetMarkerSize(1.0);
-            p->SetPoint(0, x/10.0, y/10.0, z/10.0);
-            p->SetMarkerColor(kGreen);
-            p->SetTitle(Form("Tracker Hit\n"
-                    "(x, y, z) = (%.3f, %.3f, %.3f)\n"
-                    "Time = %f, EDep = %f",
-                    x, y, z, hitTime, edep));
-            elements->AddElement(p);
-        }
         return elements;
     }
 
