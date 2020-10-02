@@ -51,6 +51,7 @@ int main (int argc, char **argv) {
                 break;
             case 't':
                 excludeCollectionTypes.insert(std::string(optarg));
+                break;
             case 'b':
                 bY = std::stod(optarg);
                 break;
