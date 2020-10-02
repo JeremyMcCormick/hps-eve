@@ -144,16 +144,28 @@ namespace hps {
         log("Done adding tracker!", INFO);
     }
 
-    void DetectorGeometry::addEcal() {
+    void DetectorGeometry::addEcal(Char_t transparency) {
         log("Adding ECAL...", INFO);
         auto cal = createGeoElements(geo_,
                                      "ECAL",
                                      "/world_volume_1",
                                      "crystal_volume",
-                                     50);
+                                     transparency);
         cal->SetDrawOption("w");
         eve_->AddGlobalElement(cal);
         log("Done adding ECAL!", INFO);
+    }
+
+    void DetectorGeometry::addHodoscope(Char_t transparency) {
+        log("Adding Hodoscope...", INFO);
+        auto hodo = createGeoElements(geo_,
+                                     "Hodoscope",
+                                     "/world_volume_1/tracking_volume_0",
+                                     "hodo_vol_L",
+                                     transparency);
+        //hodo->SetDrawOption("w");
+        eve_->AddGlobalElement(hodo);
+        log("Done adding Hodoscope!", INFO);
     }
 
     TEveElement* DetectorGeometry::toEveElement(TGeoManager* geo, TGeoNode* node) {
@@ -219,6 +231,7 @@ namespace hps {
     void DetectorGeometry::buildDetector() {
         addTracker();
         addEcal();
+        addHodoscope();
     }
 
     bool DetectorGeometry::isInitialized() {

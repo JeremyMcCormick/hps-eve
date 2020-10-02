@@ -65,9 +65,14 @@ namespace hps {
             void addTracker(Char_t transparency = 50);
 
             /**
+             * Add the Hodoscope to Eve.
+             */
+            void addHodoscope(Char_t transparency = 50);
+
+            /**
              * Add the ECAL to Eve.
              */
-            void addEcal();
+            void addEcal(Char_t transparency = 50);
 
         private:
 
