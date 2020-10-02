@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <fstream>
+#include <sstream>
 
 // ROOT
 #include "TEveElement.h"
@@ -105,13 +106,40 @@ namespace hps {
         return elements;
     }
 
-    void DetectorGeometry::addTracker() {
+    void DetectorGeometry::addTracker(Char_t transparency) {
         log("Adding tracker...", INFO);
-        auto tracker = createGeoElements(geo_,
-                                         "SVT",
-                                         "/world_volume_1/tracking_volume_0/base_volume_0",
-                                         "module_L",
-                                         50);
+        auto tracker = new TEveElementList("SVT");
+        std::string basePath("/world_volume_1/tracking_volume_0/base_volume_0");
+        geo_->cd(basePath.c_str());
+        auto base = geo_->GetCurrentNode();
+        int n = base->GetNdaughters();
+        for (int i=0; i<n; i++) {
+            auto module = base->GetDaughter(i);
+            std::string dauName(module->GetName());
+            if (dauName.find("module_L") != std::string::npos) {
+                for (int j=0; j<module->GetNdaughters(); j++) {
+                    auto moduleDau = module->GetDaughter(j);
+                    auto moduleDauName = std::string(moduleDau->GetName());
+                    if (moduleDauName.find("sensor") != std::string::npos) {
+                        std::stringstream ss;
+                        ss << basePath << "/" << module->GetName() << "/" << moduleDauName;
+                        geo_->cd(ss.str().c_str());
+                        TGeoNode* node = geo_->GetCurrentNode();
+                        TGeoVolume* volume = geo_->GetCurrentVolume();
+                        std::string sensorName(node->GetName());
+                        sensorName.replace(sensorName.find("_volume_0"), sizeof("_volume_0") - 1, "");
+                        TEveGeoShape* shape = new TEveGeoShape(sensorName.c_str(), volume->GetMaterial()->GetName());
+                        shape->SetShape((TGeoShape*) volume->GetShape()->Clone());
+                        shape->SetMainColor(volume->GetLineColor());
+                        shape->SetFillColor(volume->GetFillColor());
+                        shape->SetMainTransparency(transparency);
+                        shape->RefMainTrans().SetFrom(*geo_->GetCurrentMatrix());
+                        tracker->AddElement(shape);
+                        log(FINE) << "Added SVT volume: " << volume->GetName() << std::endl;
+                    }
+                }
+            }
+        }
         eve_->AddGlobalElement(tracker);
         log("Done adding tracker!", INFO);
     }

@@ -62,7 +62,7 @@ namespace hps {
             /**
              * Add the SVT to Eve.
              */
-            void addTracker();
+            void addTracker(Char_t transparency = 50);
 
             /**
              * Add the ECAL to Eve.
