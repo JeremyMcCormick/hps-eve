@@ -19,6 +19,8 @@
 #include "EVENT/Cluster.h"
 #include "EVENT/Track.h"
 #include "EVENT/ReconstructedParticle.h"
+#include "IMPL/LCCollectionVec.h"
+#include "EVENT/Vertex.h"
 
 // ROOT
 #include "TEveElement.h"
@@ -71,6 +73,8 @@ namespace hps {
                 elements = createCalClusters(collection);
             } else if (typeName == LCIO::TRACK) {
                 elements = createReconTracks(collection);
+            } else if (typeName == LCIO::RECONSTRUCTEDPARTICLE) {
+                elements = createReconstructedParticles(collection);
             }
             if (elements != nullptr) {
                 elements->SetElementName(collectionName.c_str());
@@ -347,7 +351,6 @@ namespace hps {
             float y = clus->getPosition()[1]/10.0;
             float z = clus->getPosition()[2]/10.0;
 
-
             log(FINEST) << "Adding cluster at: ("
                     << x << "," << y << ", " << z << ")" << std::endl;
 
@@ -511,6 +514,25 @@ namespace hps {
         return clusStyle;
     }
 
+    TStyle EventObjects::createParticleStyle() {
+            Int_t palette[12];
+            palette[0] = TColor::GetColor("#800000");
+            palette[1] = TColor::GetColor("#fffac8");
+            palette[2] = TColor::GetColor("#808000");
+            palette[3] = TColor::GetColor("#469990");
+            palette[4] = TColor::GetColor("#000075");
+            palette[5] = TColor::GetColor("#f58231");
+            palette[6] = TColor::GetColor("#bfef45");
+            palette[7] = TColor::GetColor("#42d4f4");
+            palette[8] = TColor::GetColor("#911eb4");
+            palette[9] = TColor::GetColor("#f032e6");
+            palette[10] = TColor::GetColor("#ffd8b1");
+            palette[11] = TColor::GetColor("#dcbeff");
+            TStyle particleStyle;
+            particleStyle.SetPalette(12, palette);
+            return particleStyle;
+        }
+
     void EventObjects::setMCPCut(double cut) {
         mcPCut = cut;
         log(INFO) << "Setting new MCParticle P cut: " << cut << std::endl;
@@ -590,16 +612,156 @@ namespace hps {
     }
 
     TEveElementList* EventObjects::createReconstructedParticles(EVENT::LCCollection* coll) {
+
+        TEveTrackPropagator *propsetCharged = new TEveTrackPropagator();
+        propsetCharged->SetMagFieldObj(new TEveMagFieldConst(0.0, app_->getMagFieldY(), 0.0));
+        propsetCharged->SetDelta(0.01);
+        propsetCharged->SetMaxR(150);
+        propsetCharged->SetMaxZ(200);
+        propsetCharged->SetMaxOrbs(2.0);
+        propsetCharged->SetFitDecay(true);
+
+        TEveTrackPropagator *propsetNeutral = new TEveTrackPropagator();
+        propsetNeutral->SetMagFieldObj(new TEveMagFieldConst(0.0, app_->getMagFieldY(), 0.0));
+        propsetNeutral->SetDelta(0.01);
+        propsetNeutral->SetMaxR(150);
+        propsetNeutral->SetMaxZ(200);
+        propsetNeutral->SetMaxOrbs(1.0);
+        propsetNeutral->SetFitDecay(true);
+
+        TStyle clusStyle = createParticleStyle();
+        int nColors = clusStyle.GetNumberOfColors();
+        int currColor = 0;
         TEveElementList* elements = new TEveElementList();
+        //std::map<EVENT::ReconstructedParticle*, TEveCompound*> particleMap;
         for (int i = 0; i < coll->getNumberOfElements(); i++) {
+
+            log(FINEST) << "Creating recon particle..." << std::endl;
+
+            if (currColor > (nColors - 1)) {
+                currColor = 0;
+            }
+            int color = clusStyle.GetColorPalette(currColor);
+
             EVENT::ReconstructedParticle* particle =
                     dynamic_cast<EVENT::ReconstructedParticle*>(coll->getElementAt(i));
 
-            auto tracks = particle->getTracks();
-            auto clusters = particle->getClusters();
-            auto particles = particle->getParticles();
+            TEveCompound* compound = new TEveCompound("ReconstructedParticle");
+            compound->OpenCompound();
 
+            auto charge = particle->getCharge();
+            auto endVertex = particle->getEndVertex();
+            auto energy = particle->getEnergy();
+            auto mass = particle->getMass();
+            auto momentum = particle->getMomentum();
+            auto px = momentum[0];
+            auto py = momentum[1];
+            auto pz = momentum[2];
+            auto pid = particle->getParticleIDUsed();
+            auto refPoint = particle->getReferencePoint();
+            //auto startVertex = particle->getStartVertex();
+            //auto vertexPosition = startVertex->getPosition();
+
+            TVector3 p(px, py, pz);
+
+            auto title = Form("Reconstructed Particle\n"
+                    "(x, y, z) = (%.3f, %.3f, %.3f)\n"
+                    "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
+                    "Charge = %.3f, Energy = %.3f, PID = %d\n"
+                    "P = %.3f",
+                    refPoint[0], refPoint[1], refPoint[2],
+                    px, py, pz,
+                    charge, energy, pid->getPDG(),
+                    p.Mag());
+
+            // Create a track for the particle itself.
+            TEveRecTrack *recTrack = new TEveRecTrack();
+            recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
+            recTrack->fP.Set(p);
+            recTrack->fSign = charge;
+            TEveTrack *eveTrack = new TEveTrack(recTrack, nullptr);
+            eveTrack->SetElementName("Track");
+            if (charge != 0) {
+                eveTrack->SetPropagator(propsetCharged);
+            } else {
+                eveTrack->SetPropagator(propsetNeutral);
+            }
+            eveTrack->SetMainColor(color);
+            eveTrack->MakeTrack(false);
+            eveTrack->SetElementTitle(title);
+            eveTrack->SetElementName("Particle");
+            compound->AddElement(eveTrack);
+
+            // Create tracks and set their color.
+            auto tracks = particle->getTracks();
+            log(FINEST) << "Creating n tracks: " << tracks.size() << std::endl;
+            IMPL::LCCollectionVec trackVec(LCIO::TRACK);
+            trackVec.setSubset(true);
+            for (EVENT::TrackVec::const_iterator it = tracks.begin();
+                    it != tracks.end(); it++) {
+                trackVec.push_back(*it);
+            }
+            TEveElementList* trackList = createReconTracks(&trackVec);
+            trackList->SetElementName("Tracks");
+            for (TEveElementList::List_i it = trackList->BeginChildren();
+                    it != trackList->EndChildren(); it++) {
+                (*it)->SetMainColor(color);
+                (*it)->SetElementTitle(title);
+                (*it)->SetRnrSelf(false);
+            }
+            compound->AddElement(trackList);
+
+            // Build clusters and set their color.
+            auto clusters = particle->getClusters();
+            log(FINEST) << "Creating n clusters: " << tracks.size() << std::endl;
+            IMPL::LCCollectionVec clusterVec(LCIO::CLUSTER);
+            clusterVec.setSubset(true);
+            for (EVENT::ClusterVec::const_iterator it = clusters.begin();
+                    it != clusters.end(); it++) {
+                EVENT::Cluster* clus = *it;
+                const float* pos = clus->getPosition();
+                log(FINEST) << "Adding cluster at: ("
+                        << pos[0] << ", " << pos[1] << ", " << pos[2]
+                        << ")" << std::endl;
+                clusterVec.push_back(*it);
+            }
+            TEveElementList* clusterList = createCalClusters(&clusterVec);
+            clusterList->SetElementName("Clusters");
+            for (TEveElementList::List_i it = clusterList->BeginChildren();
+                    it != clusterList->EndChildren(); it++) {
+                TEveElement* clusterElement = (*it);
+                clusterElement->SetMainColor(color);
+                clusterElement->SetElementTitle(title);
+                for (TEveElement::List_i it2 = clusterElement->BeginChildren();
+                        it2 != clusterElement->EndChildren();
+                        it2++) {
+                    TEveElement* hitElement = (*it2);
+                    hitElement->SetMainColor(color);
+                    hitElement->SetElementTitle(title);
+                }
+            }
+            compound->AddElement(clusterList);
+
+            compound->CloseCompound();
+            compound->SetRnrSelfChildren(true, true);
+            elements->AddElement(compound);
+            //particleMap[particle] = compound;
+
+            ++currColor;
+
+            log(FINEST) << "Done creating recon particle!" << std::endl;
         }
+
+        /*
+        for (std::map<EVENT::ReconstructedParticle*, TEveCompound*>::iterator it = particleMap.begin();
+                it != particleMap.end(); it++) {
+            EVENT::ReconstructedParticle* particle = it->first;
+            TEveCompound* compound = it->second;
+            compound->OpenCompound();
+            TEveElementList* particles = new TEveElementList("Particles");
+        }
+        */
+
         return elements;
     }
 

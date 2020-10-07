@@ -8,6 +8,7 @@
 #include "TEveManager.h"
 #include "TStyle.h"
 #include "TDatabasePDG.h"
+#include "TEveTrack.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -57,6 +58,8 @@ namespace hps {
                                            EVENT::MCParticle* p);
 
             static TStyle createClusStyle();
+
+            static TStyle createParticleStyle();
 
             const std::vector<TEveElementList*> getElementsByType(const std::string& typeName);
 
