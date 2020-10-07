@@ -13,4 +13,6 @@ fi
 . install/bin/hps-eve-env.sh
 echo $LD_LIBRARY_PATH
 
-./install/bin/hps-eve -l 6 -b 1.034 -e HodoscopeHits -e TrackerHitsECal -e HodoscopePreprocessedHits $@
+./install/bin/hps-eve -l 6 -b 1.034 -e TrackerHitsECal -e HodoscopePreprocessedHits $@
+
+#./install/bin/hps-eve -l 6 -b 1.034 -t Track -t Cluster $@
