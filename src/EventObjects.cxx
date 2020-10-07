@@ -629,8 +629,8 @@ namespace hps {
         propsetNeutral->SetMaxOrbs(1.0);
         propsetNeutral->SetFitDecay(true);
 
-        TStyle clusStyle = createParticleStyle();
-        int nColors = clusStyle.GetNumberOfColors();
+        TStyle style = createParticleStyle();
+        int nColors = style.GetNumberOfColors();
         int currColor = 0;
         TEveElementList* elements = new TEveElementList();
         //std::map<EVENT::ReconstructedParticle*, TEveCompound*> particleMap;
@@ -641,7 +641,7 @@ namespace hps {
             if (currColor > (nColors - 1)) {
                 currColor = 0;
             }
-            int color = clusStyle.GetColorPalette(currColor);
+            int color = style.GetColorPalette(currColor);
 
             EVENT::ReconstructedParticle* particle =
                     dynamic_cast<EVENT::ReconstructedParticle*>(coll->getElementAt(i));
