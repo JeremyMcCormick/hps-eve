@@ -55,7 +55,6 @@ namespace hps {
 
         // Initialize the geometry and load detector if GDML was provided.
         det_ = new DetectorGeometry(this, cache_);
-        det_->setLogLevel(getLogLevel());
         if (geometryFile_.size() > 0) {
             log("Opening geometry file: " + geometryFile_, INFO);
             det_->loadDetectorFile(geometryFile_);
@@ -274,7 +273,7 @@ namespace hps {
             std::cout << "      " << *it << std::endl;
         }
         std::cout << "    bY: " << bY_ << std::endl;
-        std::cout << "  -------------------------------- " << std::endl;
+        std::cout << "  ----------------------------------- " << std::endl;
         std::cout << std::endl;
     }
 
