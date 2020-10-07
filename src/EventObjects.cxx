@@ -651,6 +651,9 @@ namespace hps {
 
             auto charge = particle->getCharge();
             auto endVertex = particle->getEndVertex();
+            if (endVertex == nullptr) {
+                log(FINEST) << "End vertex is null!" << std::endl;
+            }
             auto energy = particle->getEnergy();
             auto mass = particle->getMass();
             auto momentum = particle->getMomentum();
@@ -659,11 +662,13 @@ namespace hps {
             auto pz = momentum[2];
             auto pid = particle->getParticleIDUsed();
             auto refPoint = particle->getReferencePoint();
-            //auto startVertex = particle->getStartVertex();
-            //auto vertexPosition = startVertex->getPosition();
 
             TVector3 p(px, py, pz);
 
+            int pdg = 0;
+            if (pid != nullptr) {
+                pdg = pid->getPDG();
+            }
             auto title = Form("Reconstructed Particle\n"
                     "(x, y, z) = (%.3f, %.3f, %.3f)\n"
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
@@ -671,7 +676,7 @@ namespace hps {
                     "P = %.3f",
                     refPoint[0], refPoint[1], refPoint[2],
                     px, py, pz,
-                    charge, energy, pid->getPDG(),
+                    charge, energy, pdg,
                     p.Mag());
 
             // Create a track for the particle itself.
