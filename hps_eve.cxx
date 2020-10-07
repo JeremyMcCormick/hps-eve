@@ -41,7 +41,7 @@ int main (int argc, char **argv) {
     double bY = 0.0;
 
     int c = 0;
-    while ((c = getopt (argc, argv, "b:e:g:l:c:")) != -1) {
+    while ((c = getopt (argc, argv, "b:e:g:l:c:t:")) != -1) {
         switch (c) {
             case 'g':
                 geometryFile = std::string(optarg);
@@ -88,6 +88,7 @@ int main (int argc, char **argv) {
     // Create ROOT interpreter.
     TRint *app = 0;
     app = new TRint("XXX", 0, 0);
+    app->ExitOnException(TApplication::EExitOnException::kExit);
 
     // Create Eve manager.
     TEveManager* manager = TEveManager::Create(kTRUE, "FV");
