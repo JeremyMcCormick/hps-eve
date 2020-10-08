@@ -2,6 +2,7 @@
 
 // C++ standard library
 #include <cmath>
+#include <cstdlib>
 #include <sstream>
 
 // HPS
@@ -19,6 +20,7 @@
 #include "EVENT/Cluster.h"
 #include "EVENT/Track.h"
 #include "EVENT/ReconstructedParticle.h"
+#include "EVENT/Vertex.h"
 #include "IMPL/LCCollectionVec.h"
 #include "EVENT/Vertex.h"
 
@@ -75,6 +77,8 @@ namespace hps {
                 elements = createReconTracks(collection);
             } else if (typeName == LCIO::RECONSTRUCTEDPARTICLE) {
                 elements = createReconstructedParticles(collection);
+            } else if (typeName == LCIO::VERTEX) {
+                elements = createVertices(collection);
             }
             if (elements != nullptr) {
                 elements->SetElementName(collectionName.c_str());
@@ -278,12 +282,11 @@ namespace hps {
             }
 
             // Decay point
-            TEvePathMark* pmDecay = new TEvePathMark(TEvePathMark::kDecay);
             const double* endPoint = mcp->getEndpoint();
             if (endPoint != nullptr) {
                 TEveVector v(endPoint[0]/10., endPoint[1]/10., endPoint[2]/10.);
-                TEvePathMark* pm3 = new TEvePathMark(TEvePathMark::kDecay, v);
-                track->AddPathMark(*pm3);
+                TEvePathMark* pmDecay = new TEvePathMark(TEvePathMark::kDecay, v);
+                track->AddPathMark(*pmDecay);
             }
 
             track->MakeTrack(false);
@@ -313,7 +316,7 @@ namespace hps {
         return mcTracks;
     }
 
-
+    /*
     void EventObjects::findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                           EVENT::LCCollection* hits,
                                           EVENT::MCParticle* p) {
@@ -325,6 +328,7 @@ namespace hps {
             }
         }
     }
+    */
 
     TEveElementList* EventObjects::createCalClusters(EVENT::LCCollection* coll) {
 
@@ -355,7 +359,7 @@ namespace hps {
                     << x << "," << y << ", " << z << ")" << std::endl;
 
             TEvePointSet* p = new TEvePointSet(1);
-            p->SetElementName("Cluster");
+            p->SetElementName("Cluster Center");
             p->SetMarkerStyle(kStar);
             p->SetMarkerSize(3.0);
             p->SetPoint(0, x, y, z);
@@ -422,6 +426,16 @@ namespace hps {
 
             auto track = (EVENT::Track*) coll->getElementAt(i);
 
+            if (track == nullptr) {
+                log(WARNING) << "Got a track that points to null!" << std::endl;
+                continue;
+            }
+
+            if (track->getTrackStates().size() == 0) {
+                log(WARNING) << "Got a track with no track states!" << std::endl;
+                continue;
+            }
+
             auto ts = track->getTrackState(EVENT::TrackState::AtIP);
 
             float omega = ts->getOmega();
@@ -486,12 +500,37 @@ namespace hps {
                     track->getChi2()));
 
             eveTrack->SetUserData(new TrackUserData(track, p.Mag()));
-
             eveTrack->MakeTrack();
-
             elements->AddElement(eveTrack);
         }
 
+        return elements;
+    }
+
+    TEveElementList* EventObjects::createVertices(EVENT::LCCollection* coll) {
+        TEveElementList* elements = new TEveElementList();
+        for (int i = 0; i < coll->getNumberOfElements(); i++) {
+            EVENT::Vertex* vertex = (EVENT::Vertex*) coll->getElementAt(i);
+            auto chi2 = vertex->getChi2();
+            auto position = vertex->getPosition();
+            auto algoType = vertex->getAlgorithmType();
+            auto probability = vertex->getProbability();
+            log(FINE) << "Adding vertex at: ("
+                    << position[0] << ", " << position[1] << ", " << position[2] << ")"
+                    << std::endl;
+            TEvePointSet* p = new TEvePointSet(1);
+            p->SetElementName("Vertex");
+            p->SetMarkerStyle(kCircle);
+            p->SetMarkerSize(1.0);
+            p->SetPoint(0, position[0]/10., position[1]/10., position[2]/10.);
+            p->SetMarkerColor(kWhite);
+            p->SetElementTitle(Form("Vertex\n"
+                    "x, y, z = (%.3f, %.3f, %.3f)\n"
+                    "chi2 = %.3f, probability = %.3f",
+                    position[0], position[1], position[2],
+                    chi2, probability));
+            elements->AddElement(p);
+        }
         return elements;
     }
 
@@ -513,25 +552,6 @@ namespace hps {
         clusStyle.SetPalette(12, clusPalette);
         return clusStyle;
     }
-
-    TStyle EventObjects::createParticleStyle() {
-            Int_t palette[12];
-            palette[0] = TColor::GetColor("#800000");
-            palette[1] = TColor::GetColor("#fffac8");
-            palette[2] = TColor::GetColor("#808000");
-            palette[3] = TColor::GetColor("#469990");
-            palette[4] = TColor::GetColor("#000075");
-            palette[5] = TColor::GetColor("#f58231");
-            palette[6] = TColor::GetColor("#bfef45");
-            palette[7] = TColor::GetColor("#42d4f4");
-            palette[8] = TColor::GetColor("#911eb4");
-            palette[9] = TColor::GetColor("#f032e6");
-            palette[10] = TColor::GetColor("#ffd8b1");
-            palette[11] = TColor::GetColor("#dcbeff");
-            TStyle particleStyle;
-            particleStyle.SetPalette(12, palette);
-            return particleStyle;
-        }
 
     void EventObjects::setMCPCut(double cut) {
         mcPCut = cut;
@@ -629,19 +649,16 @@ namespace hps {
         propsetNeutral->SetMaxOrbs(1.0);
         propsetNeutral->SetFitDecay(true);
 
-        TStyle style = createParticleStyle();
+        TStyle style;
+        style.SetPalette(kRainBow); // FIXME: hard-coded color palette
         int nColors = style.GetNumberOfColors();
-        int currColor = 0;
         TEveElementList* elements = new TEveElementList();
         //std::map<EVENT::ReconstructedParticle*, TEveCompound*> particleMap;
         for (int i = 0; i < coll->getNumberOfElements(); i++) {
 
-            log(FINEST) << "Creating recon particle..." << std::endl;
+            log(FINEST) << "Creating recon particle: " << i << std::endl;
 
-            if (currColor > (nColors - 1)) {
-                currColor = 0;
-            }
-            int color = style.GetColorPalette(currColor);
+            int color = style.GetColorPalette(rand() % nColors);
 
             EVENT::ReconstructedParticle* particle =
                     dynamic_cast<EVENT::ReconstructedParticle*>(coll->getElementAt(i));
@@ -651,9 +668,6 @@ namespace hps {
 
             auto charge = particle->getCharge();
             auto endVertex = particle->getEndVertex();
-            if (endVertex == nullptr) {
-                log(FINEST) << "End vertex is null!" << std::endl;
-            }
             auto energy = particle->getEnergy();
             auto mass = particle->getMass();
             auto momentum = particle->getMomentum();
@@ -661,7 +675,21 @@ namespace hps {
             auto py = momentum[1];
             auto pz = momentum[2];
             auto pid = particle->getParticleIDUsed();
-            auto refPoint = particle->getReferencePoint();
+            auto startVertex = particle->getStartVertex();
+
+            float* startPosition = nullptr;
+            if (startVertex != nullptr) {
+                startPosition = const_cast<float*>(startVertex->getPosition());
+                log(FINEST) << "Using vertex for start position." << std::endl;
+            } else {
+                startPosition = const_cast<float*>(particle->getReferencePoint());
+                log(FINEST) << "Using reference point for start position." << std::endl;
+            }
+
+            float* endPosition = nullptr;
+            if (endVertex != nullptr) {
+                endPosition = const_cast<float*>(endVertex->getPosition());
+            }
 
             TVector3 p(px, py, pz);
 
@@ -674,14 +702,14 @@ namespace hps {
                     "(Px, Py, Pz) = (%.3f, %.3f, %.3f)\n"
                     "Charge = %.3f, Energy = %.3f, PID = %d\n"
                     "P = %.3f",
-                    refPoint[0], refPoint[1], refPoint[2],
+                    startPosition[0], startPosition[1], startPosition[2],
                     px, py, pz,
                     charge, energy, pdg,
                     p.Mag());
 
             // Create a track for the particle itself.
             TEveRecTrack *recTrack = new TEveRecTrack();
-            recTrack->fV.Set(TEveVector(refPoint[0], refPoint[1], refPoint[2]));
+            recTrack->fV.Set(TEveVector(startPosition[0]/10., startPosition[1]/10., startPosition[2]/10.));
             recTrack->fP.Set(p);
             recTrack->fSign = charge;
             TEveTrack *eveTrack = new TEveTrack(recTrack, nullptr);
@@ -692,9 +720,20 @@ namespace hps {
                 eveTrack->SetPropagator(propsetNeutral);
             }
             eveTrack->SetMainColor(color);
-            eveTrack->MakeTrack(false);
             eveTrack->SetElementTitle(title);
             eveTrack->SetElementName("Particle");
+
+            // Add the end vertex as a path mark, if it exists.
+            if (endPosition != nullptr) {
+                log(FINEST) << "Adding decay PM at: ("
+                        << endPosition[0] << ", " << endPosition[1] << ", " << endPosition[2] << ")"
+                        << std::endl;
+                TEveVector v(endPosition[0]/10., endPosition[1]/10., endPosition[2]/10.);
+                TEvePathMark* pmDecay = new TEvePathMark(TEvePathMark::kDecay, v);
+                eveTrack->AddPathMark(*pmDecay);
+            }
+
+            eveTrack->MakeTrack(false);
             compound->AddElement(eveTrack);
 
             // Create tracks and set their color.
@@ -747,25 +786,37 @@ namespace hps {
             }
             compound->AddElement(clusterList);
 
+            // Draw start vertex and set the color.
+            if (startVertex != nullptr) {
+                log(FINEST) << "Adding start vertex" << std::endl;
+                IMPL::LCCollectionVec vertexVec(LCIO::VERTEX);
+                vertexVec.setSubset(true);
+                vertexVec.push_back(startVertex);
+                TEveElementList* vertices = createVertices(&vertexVec);
+                TEveElement* vertexElement = (*vertices->BeginChildren());
+                vertexElement->SetMainColor(color);
+                vertexElement->SetElementName("Start Vertex");
+                compound->AddElement(vertexElement);
+            }
+
+            // Draw end vertex and set the color.
+            if (endVertex != nullptr) {
+                log(FINEST) << "Adding end vertex" << std::endl;
+                IMPL::LCCollectionVec vertexVec(LCIO::VERTEX);
+                vertexVec.setSubset(true);
+                vertexVec.push_back(endVertex);
+                TEveElementList* vertices = createVertices(&vertexVec);
+                TEveElement* vertexElement = (*vertices->BeginChildren());
+                vertexElement->SetMainColor(color);
+                vertexElement->SetElementName("End Vertex");
+                compound->AddElement(vertexElement);
+            }
+
             compound->CloseCompound();
             compound->SetRnrSelfChildren(true, true);
             elements->AddElement(compound);
-            //particleMap[particle] = compound;
-
-            ++currColor;
-
-            log(FINEST) << "Done creating recon particle!" << std::endl;
+            log(FINEST) << "Done creating recon particle: " << i << std::endl;
         }
-
-        /*
-        for (std::map<EVENT::ReconstructedParticle*, TEveCompound*>::iterator it = particleMap.begin();
-                it != particleMap.end(); it++) {
-            EVENT::ReconstructedParticle* particle = it->first;
-            TEveCompound* compound = it->second;
-            compound->OpenCompound();
-            TEveElementList* particles = new TEveElementList("Particles");
-        }
-        */
 
         return elements;
     }
