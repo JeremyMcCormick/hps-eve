@@ -41,6 +41,8 @@ namespace hps {
 
     void EventDisplay::initialize() {
 
+        printConfig();
+
         // This pointer needs to be set externally for now before initialization.
         if (eveManager_ == nullptr) {
             throw std::runtime_error("The Eve manager was not set!");
@@ -53,7 +55,6 @@ namespace hps {
 
         // Initialize the geometry and load detector if GDML was provided.
         det_ = new DetectorGeometry(this, cache_);
-        det_->setLogLevel(getLogLevel());
         if (geometryFile_.size() > 0) {
             log("Opening geometry file: " + geometryFile_, INFO);
             det_->loadDetectorFile(geometryFile_);
@@ -195,8 +196,9 @@ namespace hps {
         return lcioFileList_;
     }
 
-    bool EventDisplay::excludeCollection(const std::string& collName) {
-        return excludeColls_.find(collName) != excludeColls_.end();
+    bool EventDisplay::excludeCollection(const std::string& collectionName, EVENT::LCCollection* collection) {
+        return excludeCollectionNames_.find(collectionName) != excludeCollectionNames_.end() ||
+                excludeCollectionTypes_.find(collection->getTypeName()) != excludeCollectionTypes_.end();
     }
 
     EventDisplay* EventDisplay::getInstance() {
@@ -234,12 +236,45 @@ namespace hps {
         lcioFileList_.insert(lcioFileList_.end(), lcioFileList.begin(), lcioFileList.end());
     }
 
-    void EventDisplay::addExcludeCollections(std::set<std::string> excludeColls) {
-        excludeColls_.insert(excludeColls.begin(), excludeColls.end());
+    void EventDisplay::addExcludeCollectionNames(std::set<std::string> excludeCollectionNames) {
+        excludeCollectionNames_.insert(excludeCollectionNames.begin(), excludeCollectionNames.end());
+    }
+
+    void EventDisplay::addExcludeCollectionTypes(std::set<std::string> excludeCollectionTypes) {
+        excludeCollectionTypes_.insert(excludeCollectionTypes.begin(), excludeCollectionTypes.end());
     }
 
     void EventDisplay::setMagFieldY(double bY) {
         bY_ = bY;
+    }
+
+    void EventDisplay::printConfig() {
+
+        std::cout << std::endl;
+        std::cout << "  -------- HPS Event Display -------- " << std::endl;
+        std::cout << "    log level: " << getLogLevel() << std::endl;
+        std::cout << "    geometry: " << geometryFile_ << std::endl;
+        std::cout << "    files: " << std::endl;
+        for (std::vector<std::string>::iterator it = lcioFileList_.begin();
+                it != lcioFileList_.end();
+                it++) {
+            std::cout << "      " << *it << std::endl;
+        }
+        std::cout << "    exclude collections: " << std::endl;
+        for (std::set<std::string>::iterator it = excludeCollectionNames_.begin();
+                it != excludeCollectionNames_.end();
+                it++) {
+            std::cout << "      " << *it << std::endl;
+        }
+        std::cout << "    exclude types: " << std::endl;
+        for (std::set<std::string>::iterator it = excludeCollectionTypes_.begin();
+                it != excludeCollectionTypes_.end();
+                it++) {
+            std::cout << "      " << *it << std::endl;
+        }
+        std::cout << "    bY: " << bY_ << std::endl;
+        std::cout << "  ----------------------------------- " << std::endl;
+        std::cout << std::endl;
     }
 
 } /* namespace hps */

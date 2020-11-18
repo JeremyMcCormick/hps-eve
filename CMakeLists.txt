@@ -4,9 +4,10 @@ project(hps-eve VERSION 0.0.1)
 if(DEFINED ENV{ROOTSYS})
     list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 endif()
-#message(FATAL_ERROR "ROOTSYS was not defined in the environment.")
 
 find_package(ROOT REQUIRED COMPONENTS Core Rint Geom Gui Eve)
+message(STATUS "ROOT found at: ${ROOT_DIR}")
+
 find_package(LCIO REQUIRED)
 
 find_package(CURL)

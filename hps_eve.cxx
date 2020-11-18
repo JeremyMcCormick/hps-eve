@@ -15,13 +15,16 @@ using hps::EventDisplay;
 
 void print_usage(const char* msg = 0, bool doExit = true, int returnCode = 1) {
     std::cout << "Usage: hps-eve [args] [LCIO files]" << std::endl;
-    std::cout << "    -g [gdml] : Path to GDML file" << std::endl;
-    std::cout << "    -b [bY] : Fixed BY value" << std::endl;
-    std::cout << "    -l [level] : Log level (0-6)" << std::endl;
-    std::cout << "    -e [collection] : LCIO collection to exclude by name" << std::endl;
-    std::cout << "    -c [directory] : Path to cache directory which will be created" << std::endl;
-    std::cout << "GDML file is required if curl and libxml2 were not enabled." << std::endl;
-    std::cout << "One or more LCIO files are required." << std::endl;
+    std::cout << "    -g [gdml]       : Path to GDML file" << std::endl;
+    std::cout << "    -b [bY]         : Fixed mag field value" << std::endl;
+    std::cout << "    -l [level]      : Log level (0-6)" << std::endl;
+    std::cout << "    -e [collection] : Exclude LCIO collection by name" << std::endl;
+    std::cout << "    -t [type]       : Exclude LCIO collections by type" << std::endl;
+    std::cout << "    -c [directory]  : Path to local cache directory" << std::endl;
+#if !defined(HAVE_CURL) || !defined(HAVE_LIBXML2)
+    std::cout << "GDML file is required (curl or libxml2 was not enabled)." << std::endl;
+#endif
+    std::cout << "One or more LCIO files are required as extra arguments." << std::endl;
     if (msg) {
         std::cout << msg << std::endl;
     }
@@ -34,19 +37,23 @@ int main (int argc, char **argv) {
 
     std::string geometryFile;
     std::vector<std::string> lcioFileList;
-    std::set<std::string> excludeColls;
+    std::set<std::string> excludeCollectionNames;
+    std::set<std::string> excludeCollectionTypes;
     std::string cacheDir(".cache");
     int logLevel = hps::ERROR;
     double bY = 0.0;
 
     int c = 0;
-    while ((c = getopt (argc, argv, "b:e:g:l:c:")) != -1) {
+    while ((c = getopt (argc, argv, "hb:e:g:l:c:t:")) != -1) {
         switch (c) {
             case 'g':
                 geometryFile = std::string(optarg);
                 break;
             case 'e':
-                excludeColls.insert(std::string(optarg));
+                excludeCollectionNames.insert(std::string(optarg));
+                break;
+            case 't':
+                excludeCollectionTypes.insert(std::string(optarg));
                 break;
             case 'b':
                 bY = std::stod(optarg);
@@ -84,6 +91,7 @@ int main (int argc, char **argv) {
     // Create ROOT interpreter.
     TRint *app = 0;
     app = new TRint("XXX", 0, 0);
+    app->ExitOnException(TApplication::EExitOnException::kExit);
 
     // Create Eve manager.
     TEveManager* manager = TEveManager::Create(kTRUE, "FV");
@@ -99,7 +107,8 @@ int main (int argc, char **argv) {
     ed->setGeometryFile(geometryFile);
     ed->setCacheDir(cacheDir);
     ed->addLcioFiles(lcioFileList);
-    ed->addExcludeCollections(excludeColls);
+    ed->addExcludeCollectionNames(excludeCollectionNames);
+    ed->addExcludeCollectionTypes(excludeCollectionTypes);
     ed->setMagFieldY(bY);
     ed->initialize();
 

@@ -8,6 +8,7 @@
 #include "TEveManager.h"
 #include "TStyle.h"
 #include "TDatabasePDG.h"
+#include "TEveTrack.h"
 
 // LCIO
 #include "EVENT/LCObject.h"
@@ -37,22 +38,31 @@ namespace hps {
 
         private:
 
-            TEveElementList* createSimTrackerHits(EVENT::LCCollection* coll);
+            TEveElementList* createSimTrackerHits(EVENT::LCCollection*);
 
-            TEveElementList* createSimCalorimeterHits(EVENT::LCCollection* coll);
+            TEveElementList* createSimCalorimeterHits(EVENT::LCCollection*);
 
-            TEveElementList* createMCParticles(EVENT::LCCollection *coll,
-                                               EVENT::LCCollection *simTrackerHits);
+            TEveElementList* createMCParticles(EVENT::LCCollection*);
 
-            TEveElementList* createCalClusters(EVENT::LCCollection* coll);
+            TEveElementList* createCalClusters(EVENT::LCCollection*);
 
-            TEveElementList* createReconTracks(EVENT::LCCollection* coll);
+            TEveElementList* createReconTracks(EVENT::LCCollection*);
 
+            TEveElementList* createTrackerHits(EVENT::LCCollection*);
+
+            TEveElementList* createReconstructedParticles(EVENT::LCCollection*);
+
+            TEveElementList* createVertices(EVENT::LCCollection*);
+
+            /*
             static void findSimTrackerHits(std::vector<EVENT::SimTrackerHit*>& list,
                                            EVENT::LCCollection* hits,
                                            EVENT::MCParticle* p);
+            */
 
             static TStyle createClusStyle();
+
+            // static TStyle createParticleStyle();
 
             const std::vector<TEveElementList*> getElementsByType(const std::string& typeName);
 
@@ -66,9 +76,6 @@ namespace hps {
         private:
 
             EventDisplay* app_;
-
-            // Length cut for displaying particle trajectories in centimeters (hard-coded for now)
-            double lengthCut_{1.0};
 
             // P cut for MCParticles
             double mcPCut{0.0};

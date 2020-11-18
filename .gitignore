@@ -7,5 +7,6 @@
 fieldmap
 *.gdml
 *.lcdd
+*.slcio
 *scratch*/
 .cache/
