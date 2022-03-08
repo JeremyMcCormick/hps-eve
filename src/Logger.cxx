@@ -5,7 +5,7 @@ ClassImp(hps::Logger);
 namespace hps {
 
     Logger::LoggerMap Logger::LOGGERS_ = Logger::LoggerMap();
-    LogHandler::LogHandlerMap LogHandler::HANDLERS_ = LogHandler::LogHandlerMap();
+    LogHandler::Map LogHandler::HANDLERS_ = LogHandler::Map();
 
     std::string LogHandler::DEFAULT = std::string("DEFAULT");
 

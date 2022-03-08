@@ -22,8 +22,8 @@ namespace hps {
 
         public:
 
-            typedef std::map<std::string, LogHandler*> LogHandlerMap;
-            typedef LogHandlerMap::iterator LogHandlerMapIter;
+            typedef std::map<std::string, LogHandler*> Map;
+            typedef Map::iterator MapIter;
 
         public:
 
@@ -51,7 +51,7 @@ namespace hps {
             }
 
             static void flushAll() {
-                for (LogHandlerMapIter it = HANDLERS_.begin();
+                for (MapIter it = HANDLERS_.begin();
                         it != HANDLERS_.end();
                         it++) {
                     it->second->getOutputStream()->flush();
@@ -67,7 +67,7 @@ namespace hps {
 
             static std::string DEFAULT;
 
-            static LogHandlerMap HANDLERS_;
+            static Map HANDLERS_;
     };
 
     class Logger {
